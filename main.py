@@ -25,7 +25,7 @@ slovar = {0:[[151784447,158392610, 165972566, 165972565,181283677],[214791724,21
           4:[[45140119],[252809729],[180688782],[102513410],[135675780],[247275282],[175467193],[252927808],[262046768]]
           }
 
-
+sizes_names = ['0','XXS','2XS','XS','S', 'M', 'L', 'XL','2XL','3XL','4XL','5XL','6XL','7XL','8XL','9XL','10XL']
 
 
 def fill_sheet(sheet,arts):
@@ -40,12 +40,13 @@ def fill_sheet(sheet,arts):
                 continue
             sizes = response.json()['data']['products'][0]['sizes']
             result = []
-            for size in sizes:
-                if not size.get('price'):
-                    continue
-                price = str(math.floor(size['price']['total'] // 100 * 0.97))
-                if price not in result:
-                    result.append(price)
+            for size_name in sizes_names:
+                for size in sizes:
+                    if not size.get('price') or size['origName'] != size_name:
+                        continue
+                    price = str(math.floor(size['price']['total'] // 100 * 0.97))
+                    if price not in result:
+                        result.append(price)
             result = '-'.join(result)
 
             sheet.update_cell(row_index,i,result)
@@ -54,6 +55,9 @@ for key,value in slovar.items():
     sh = client.open("Конкуренты цены 2.0")
     sheet = sh.get_worksheet(key)
     fill_sheet(sheet,value)
+
+
+
 
 
 
