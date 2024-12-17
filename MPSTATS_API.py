@@ -5,8 +5,20 @@ from dotenv import load_dotenv
 import os
 from gspread.utils import rowcol_to_a1
 from datetime import datetime, timedelta
+from base_info import get_articles
+import schedule
+import telebot
 
 load_dotenv()
+
+API_TOKEN = os.getenv('API_TOKEN')
+
+CHAT_ID = os.getenv('CHAT_ID')
+
+bot = telebot.TeleBot(API_TOKEN)
+
+def send_message(text):
+    bot.send_message(CHAT_ID, text)
 
 scope = [
     "https://www.googleapis.com/auth/spreadsheets",
@@ -16,111 +28,62 @@ scope = [
 creds = ServiceAccountCredentials.from_json_keyfile_name("google_keys.json", scope)
 
 client = gspread.authorize(creds)
+if __name__ == '__main__':
+    data_articles = get_articles()
 
-data = (
-    [
-        171803170,
-        195325187,
-        165374615,
-        203597298,
-        171232105,
-        238455525,
-        143973840,
-        214791724,
-        168258699,
-        221885037,
-    ],
-    [
-        228502034,
-        243117262,
-        243180428,
-        141940975,
-        168423784,
-        189027878,
-        154844674,
-        221582470,
-        159271393,
-        189105078,
-    ],
-    [
-        228502033,
-        243119074,
-        243181642,
-        152644637,
-        168423785,
-        159271394,
-    ],
-    [
-        188985842,
-        244849109,
-        32908979,
-        191440399,
-        246012884,
-        44730048,
-        171803170,
-        218090415,
-        263690356,
-        173051528,
-    ],
-    [
-        188037949,
-        260251386,
-        119916415,
-        259028257,
-        191933262,
-        96815935,
-        175505993,
-        260251385,
-        259865204,
-        55597840,
-    ],
-    [
-        188037949,
-        96815935,
-        70722699,
-        102658625,
-        120714921,
-        178444557,
-        247782810,
-        174007288,
-        175928419,
-        183518683,
-    ],
-)
+    sheet_name = "Анализ конкурентов"
+
+    first_date = (datetime.now() - timedelta(days=14)).strftime("%Y-%m-%d")
+
+    second_date = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
 
 
-sheet_name = "АНАЛИЗ КОНКУРЕНТОВ ПИЖАМЫ АЛЯ"
-
-first_date = (datetime.now() - timedelta(days=14)).strftime("%Y-%m-%d")
-
-second_date = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
 
 
-def fill_sheet(articles):
-    sheet_data = []
-    for article in articles:
-        url = f"https://mpstats.io/api/wb/get/item/{article}/sales"
-        params = {"d1": first_date, "d2": second_date}
-        header = {
-            "Content-Type": "application/json",
-            "X-Mpstats-TOKEN": "66f7c93f83b340.31768105158e32ade09284f4dbb1d45dfd5631fb",
-        }
-        response = requests.get(url=url, params=params, headers=header)
-        final_price_dict = response.json()
-        result = []
-        for revenue in final_price_dict:
-            sale = revenue["sales"]
-            final_price = revenue["final_price"]
-            final_revenue = sale * final_price
-            result.append(final_revenue)
-        result.reverse()
+    def fill_sheet(articles):
+        sheet_data = []
+        image_formulas = []
 
-        sheet_data.append(result)
-    return sheet_data
+        for article in articles:
+            image_url = article.get('photo')
+            image_formula = f'=IMAGE("https:{image_url}")' if image_url else ''
+
+            image_formulas.append(image_formula)
+
+            url = f"https://mpstats.io/api/wb/get/item/{article['id']}/sales"
+            params = {"d1": first_date, "d2": second_date}
+            header = {
+                "Content-Type": "application/json",
+                "X-Mpstats-TOKEN": "66f7c93f83b340.31768105158e32ade09284f4dbb1d45dfd5631fb",
+            }
+            response = requests.get(url=url, params=params, headers=header, timeout= 10)
+            final_price_dict = response.json()
+            result = []
+            for revenue in final_price_dict:
+                sale = revenue["sales"]
+                final_price = revenue["final_price"]
+                final_revenue = sale * final_price
+                result.append(final_revenue)
+            result.reverse()
+
+            sheet_data.append(result)
+
+        return image_formulas, sheet_data
 
 
-for i, articles in enumerate(data):
-    sh = client.open(sheet_name).get_worksheet(i)
-    result = fill_sheet(articles)
-    letter = rowcol_to_a1(len(result[0]) + 2, len(result) + 1)
-    sh.update(list(zip(*result)), f"B3:{letter}")
+    for i, articles in enumerate(data_articles):
+        sh = client.open(sheet_name).get_worksheet(i)
+        r = [[str(article['brand']) + ' ' + str(article['id']) for article in articles]]
+        start_row = 2
+        start_col = 2
+        end_col = start_col + len(r[0]) - 1
+        letter = rowcol_to_a1(start_row, end_col)
+        sh.update(r, f'B{start_row}:{letter}')
+        image_formulas, result = fill_sheet(articles)
+        sh.update([image_formulas], f'B1:{rowcol_to_a1(1, start_col + len(image_formulas) - 1)}', value_input_option='USER_ENTERED')
+        letter = rowcol_to_a1(len(result[0]) + 2, len(result) + 1)
+        sh.update(list(zip(*result)), f"B3:{letter}")
+
+
+
+    send_message('Анализ конкурентов обновлен')

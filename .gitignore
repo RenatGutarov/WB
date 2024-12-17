@@ -1,4 +1,6 @@
 .idea
 .venv
 .env
-google_keys.json
+.json
+.chromedriver
+.pkl

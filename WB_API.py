@@ -6,6 +6,8 @@ import os
 import math
 import time
 
+from MPSTATS_API import send_message
+
 load_dotenv()
 
 scope = [
@@ -132,3 +134,5 @@ for key, value in slovar.items():
     sh = client.open("Конкуренты цены 2.0")
     sheet = sh.get_worksheet(key)
     fill_sheet(sheet, value)
+
+send_message('Табличка цен обновлена')
