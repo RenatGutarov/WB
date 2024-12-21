@@ -5,10 +5,13 @@ from dotenv import load_dotenv
 import os
 import math
 import time
+import schedule
 
 from MPSTATS_API import send_message
 
 load_dotenv()
+
+
 
 scope = [
     "https://www.googleapis.com/auth/spreadsheets",
@@ -129,10 +132,21 @@ def fill_sheet(sheet, arts):
 
             sheet.update_cell(row_index, i, result)
 
+def update_prices(slovar):
+    for key, value in slovar.items():
+        sh = client.open("Конкуренты цены 2.0")
+        sheet = sh.get_worksheet(key)
+        fill_sheet(sheet, value)
+    send_message('Табличка цен обновлена')
 
-for key, value in slovar.items():
-    sh = client.open("Конкуренты цены 2.0")
-    sheet = sh.get_worksheet(key)
-    fill_sheet(sheet, value)
+update_prices(slovar)
 
-send_message('Табличка цен обновлена')
+
+# def schedule_update():
+#     update_prices(slovar)
+#
+# schedule.every().day.at('15:32').do(schedule_update)
+#
+# while True:
+#     schedule.run_pending()
+#     time.sleep(1)
