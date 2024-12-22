@@ -9,3 +9,4 @@ update_prices(slovar)
 data_articles = get_articles()
 
 update_conc(data_articles, sheet_name,)
+

@@ -133,13 +133,15 @@ def fill_sheet(sheet, arts):
             sheet.update_cell(row_index, i, result)
 
 def update_prices(slovar):
+    print('Цены обновляются')
     for key, value in slovar.items():
         sh = client.open("Конкуренты цены 2.0")
         sheet = sh.get_worksheet(key)
         fill_sheet(sheet, value)
     send_message('Табличка цен обновлена')
 
-update_prices(slovar)
+if __name__ == '__main__':
+    update_prices(slovar)
 
 
 # def schedule_update():

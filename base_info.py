@@ -49,7 +49,7 @@ def get_data(url):
 
 def get_articles():
     result = []
-    for group in [565827, 566068, 566067, 665525, 1, 623276]:
+    for group in [565827, 566068, 566067, 665525, 680222, 623276]:
         if len(str(group)) > 2:
             url = f"https://mpstats.io/api/wb/get/group?path={group}&d1={first_date}&d2={second_date}"
             print(f"Получение данных для группы: {group}")

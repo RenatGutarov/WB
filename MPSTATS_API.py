@@ -17,6 +17,9 @@ CHAT_ID = os.getenv('CHAT_ID')
 
 bot = telebot.TeleBot(API_TOKEN)
 
+first_date = (datetime.now() - timedelta(days=14)).strftime("%Y-%m-%d")
+second_date = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+
 
 def send_message(text):
     bot.send_message(CHAT_ID, text)
@@ -46,9 +49,9 @@ def fill_sheet(articles):
         params = {"d1": first_date, "d2": second_date}
         header = {
             "Content-Type": "application/json",
-            "X-Mpstats-TOKEN": "66f7c93f83b340.31768105158e32ade09284f4dbb1d45dfd5631fb",
+            "X-Mpstats-TOKEN":os.getenv('XMPSTASTOKEN')
         }
-        response = requests.get(url=url, params=params, headers=header, timeout=10)
+        response = requests.get(url=url, params=params, headers=header, timeout=30)
         final_price_dict = response.json()
         result = []
         for revenue in final_price_dict:
