@@ -4,9 +4,11 @@ from WB_API import update_prices, slovar
 
 sheet_name = 'Анализ конкурентов'
 
-update_prices(slovar)
-
 data_articles = get_articles()
 
 update_conc(data_articles, sheet_name,)
+
+update_prices(slovar)
+
+
 
