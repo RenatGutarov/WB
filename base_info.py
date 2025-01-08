@@ -1,7 +1,8 @@
 import os
 import pickle
+import time
 from typing import final
-
+from messaging import send_message,send_message_renat
 import requests
 from datetime import datetime, timedelta
 
@@ -48,28 +49,41 @@ def get_data(url):
 
 
 def get_articles():
-    result = []
-    for group in [565827, 566068, 566067, 665525, 680222, 623276]:
-        if len(str(group)) > 2:
-            url = f"https://mpstats.io/api/wb/get/group?path={group}&d1={first_date}&d2={second_date}"
-            print(f"Получение данных для группы: {group}")
+    max_retries = 5
+    retries = 0
+    while retries < max_retries:
+        try:
+            result = []
+            for group in [565827, 566068, 566067, 665525, 680222, 623276]:
+                if len(str(group)) > 2:
+                    url = f"https://mpstats.io/api/wb/get/group?path={group}&d1={first_date}&d2={second_date}"
+                    print(f"Получение данных для группы: {group}")
 
-            if data := get_data(url):
-                result.append(get_sku(data))
-            else:
-                print("Не удалось получить данные, выполняем вход...")
-                browser = Selenium()
-                if data := get_data(url):
-                    result.append(get_sku(data))
-                    print("Данные получены после входа")
+                    if data := get_data(url):
+                        result.append(get_sku(data))
+                    else:
+                        print("Не удалось получить данные, выполняем вход...")
+                        browser = Selenium()
+                        if data := get_data(url):
+                            result.append(get_sku(data))
+                            print("Данные получены после входа")
+                        else:
+                            print("Обратись к Саньку")
                 else:
-                    print("Обратись к Саньку")
-        else:
-            url = f"https://mpstats.io/api/wb/get/subject?d1={first_date}&d2={second_date}&path=57&fbs=0"
-            print('Получение данных для топа ниши шарфов')
-            if data := get_data(url):
-                result.append(get_sku(data))
-    return result
+                    url = f"https://mpstats.io/api/wb/get/subject?d1={first_date}&d2={second_date}&path=57&fbs=0"
+                    print('Получение данных для топа ниши шарфов')
+                    if data := get_data(url):
+                        result.append(get_sku(data))
+            if result:
+                return result
+
+        except Exception as e:
+            retries +=1
+            send_message_renat(f'Ошибка {e}, перезапуск')
+            time.sleep(120)
+
+    if retries == max_retries:
+        send_message_renat('Анализ конкурентов сломался')
 
 
 

@@ -7,7 +7,7 @@ import math
 import time
 import schedule
 
-from MPSTATS_API import send_message
+from messaging import send_message,send_message_renat
 
 load_dotenv()
 
@@ -113,24 +113,46 @@ def fill_sheet(sheet, arts):
         for i, article in enumerate(art, 2):
             if article is None:
                 continue
-            url = f"https://card.wb.ru/cards/v2/detail?dest=-1255987&nm={article}"
-            response = requests.get(url=url)
 
-            if response.status_code != 200:
-                continue
-            sizes = response.json()["data"]["products"][0]["sizes"]
-            result = []
-            for size_name in sizes_names:
-                for size in sizes:
-                    if not size.get("price") or size["origName"] != size_name:
+            max_retries = 5
+            retries = 0
+            while retries < max_retries:
+                try:
+                    url = f"https://card.wb.ru/cards/v2/detail?dest=-1255987&nm={article}"
+                    response = requests.get(url=url)
+
+                    if response.status_code != 200:
                         continue
-                    price = str(math.floor(size["price"]["total"] // 100 * 0.97))
-                    time.sleep(1)
-                    if price not in result:
-                        result.append(price)
-            result = "-".join(result)
 
-            sheet.update_cell(row_index, i, result)
+                    sizes = response.json()["data"]["products"][0]["sizes"]
+                    result = []
+                    for size_name in sizes_names:
+                        for size in sizes:
+                            if not size.get("price") or size["origName"] != size_name:
+                                continue
+                            price = str(math.floor(size["price"]["total"] // 100 * 0.97))
+                            time.sleep(1)
+                            if price not in result:
+                                result.append(price)
+                    result = "-".join(result)
+
+                    current_value = sheet.cell(row_index, i).value
+
+                    if current_value is not None and current_value != result:
+                        sheet.update_cell(row_index, i, result)
+                        sheet.format(gspread.utils.rowcol_to_a1(row_index, i),
+                                     {'backgroundColor': {'red': 1, 'green': 0.8, 'blue': 0.8}})
+                    else:
+                        sheet.update_cell(row_index, i, result)
+                        sheet.format(gspread.utils.rowcol_to_a1(row_index, i),
+                                     {'backgroundColor': {'red': 1, 'green': 1, 'blue': 1}})
+                    break
+                except Exception as e:
+                    retries += 1
+                    send_message_renat(f'Ошибка {e}, перезапуск')
+                    time.sleep(120)
+            if retries == max_retries:
+                send_message_renat(f'Конкуренты цены сломались')
 
 def update_prices(slovar):
     print('Цены обновляются')
@@ -138,17 +160,9 @@ def update_prices(slovar):
         sh = client.open("Конкуренты цены 2.0")
         sheet = sh.get_worksheet(key)
         fill_sheet(sheet, value)
-    send_message('Табличка цен обновлена')
+    send_message('Таблица цен обновлена')
 
 if __name__ == '__main__':
     update_prices(slovar)
 
 
-# def schedule_update():
-#     update_prices(slovar)
-#
-# schedule.every().day.at('15:32').do(schedule_update)
-#
-# while True:
-#     schedule.run_pending()
-#     time.sleep(1)
