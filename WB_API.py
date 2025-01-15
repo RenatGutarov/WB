@@ -6,11 +6,9 @@ import os
 import math
 import time
 import schedule
-
+from datetime import datetime, timedelta
 from messaging import send_message,send_message_renat
-
 load_dotenv()
-
 
 
 scope = [
@@ -155,11 +153,24 @@ def fill_sheet(sheet, arts):
                 send_message_renat(f'Конкуренты цены сломались')
 
 def update_prices(slovar):
+
+    update_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
     print('Цены обновляются')
+
     for key, value in slovar.items():
         sh = client.open("Конкуренты цены 2.0")
         sheet = sh.get_worksheet(key)
         fill_sheet(sheet, value)
+
+        if key == 0:
+            sh.get_worksheet(key).update([[update_time]],'g2')
+        elif key == 1:
+            sh.get_worksheet(key).update([[update_time]], 'h2')
+        else:
+            sh.get_worksheet(key).update([[update_time]], 'c2')
+
+
     send_message('Таблица цен обновлена')
 
 if __name__ == '__main__':

@@ -4,31 +4,15 @@ from datetime import datetime, timedelta
 from messaging import send_message
 import re
 import math
+from worksheet import Constants,get_sheet_yesterday
 
 
 def otchet():
-    scope = [
-        "https://www.googleapis.com/auth/spreadsheets",
-        "https://www.googleapis.com/auth/drive",
-    ]
 
-    time_for_sheet = (datetime.now() - timedelta(days=1)).strftime("%d-%m-%Y")
+    worksheet_danila = get_sheet_yesterday(Constants.DANILA)
 
-    current_sheet = time_for_sheet.replace('-', '.')
+    worksheet_denis = get_sheet_yesterday(Constants.DENIS)
 
-    creds = ServiceAccountCredentials.from_json_keyfile_name("google_keys.json", scope)
-
-    client = gspread.authorize(creds)
-
-    sh_danila = client.open("Прибыль LIVE Грищенко")
-
-    sh_denis = client.open('Прибыль LIVE Коротченков')
-
-    worksheet_danila = sh_danila.worksheet(current_sheet)
-
-    worksheet_denis = sh_denis.worksheet(current_sheet)
-
-    # val2 = worksheet.get("A1:B2")
     revenue_danila = worksheet_danila.acell('e38').value
     profit_danila = worksheet_danila.acell('n38').value
     profitability_danila = worksheet_danila.acell('O38').value
@@ -171,3 +155,4 @@ f'''
 ''')
 
 
+otchet()

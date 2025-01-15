@@ -1,17 +1,11 @@
 import os
 import pickle
 import time
-from typing import final
-from messaging import send_message,send_message_renat
+from messaging import send_message_renat
 import requests
 from datetime import datetime, timedelta
-
-from selenium.webdriver.common.devtools.v85.page import remove_script_to_evaluate_on_new_document
-
 from selenium_manager import Selenium
 
-first_date = (datetime.now() - timedelta(days=14)).strftime("%d.%m.%Y")
-second_date = (datetime.now() - timedelta(days=1)).strftime("%d.%m.%Y")
 
 
 def get_sku(data):
@@ -49,6 +43,11 @@ def get_data(url):
 
 
 def get_articles():
+
+    first_date = (datetime.now() - timedelta(days=14)).strftime("%d.%m.%Y")
+
+    second_date = (datetime.now() - timedelta(days=1)).strftime("%d.%m.%Y")
+
     max_retries = 5
     retries = 0
     while retries < max_retries:
@@ -78,7 +77,7 @@ def get_articles():
                 return result
 
         except Exception as e:
-            retries +=1
+            retries += 1
             send_message_renat(f'Ошибка {e}, перезапуск')
             time.sleep(120)
 

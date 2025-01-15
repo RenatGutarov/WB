@@ -5,18 +5,12 @@ from dotenv import load_dotenv
 import os
 from gspread.utils import rowcol_to_a1, ValueInputOption
 from datetime import datetime, timedelta
-from trio import current_time
 from messaging import send_message,send_message_renat
-import schedule
-import telebot
 import time
-
 from base_info import get_articles
 
 load_dotenv()
 
-first_date = (datetime.now() - timedelta(days=14)).strftime("%Y-%m-%d")
-second_date = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
 
 scope = [
     "https://www.googleapis.com/auth/spreadsheets",
@@ -29,6 +23,9 @@ client = gspread.authorize(creds)
 
 
 def fill_sheet(articles):
+    first_date = (datetime.now() - timedelta(days=14)).strftime("%Y-%m-%d")
+
+    second_date = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
     sheet_data = []
     image_formulas = []
 
@@ -60,6 +57,9 @@ def fill_sheet(articles):
 
 
 def update_conc(data_articles, sheet_name, ):
+    first_date = (datetime.now() - timedelta(days=14)).strftime("%Y-%m-%d")
+
+    second_date = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
     max_retries = 5
 
     retries = 0
@@ -102,10 +102,6 @@ def update_conc(data_articles, sheet_name, ):
 
                 date_range = [[date] for date in date_list]
 
-                sh.update(date_range, f'A{start_row_for_date}:A{end_row_for_date}')
-
-                sh.update(r, f'B{start_row}:{letter}')
-
                 time.sleep(5)
 
                 image_formulas, result = fill_sheet(articles)
@@ -116,6 +112,14 @@ def update_conc(data_articles, sheet_name, ):
                 letter = rowcol_to_a1(len(result[0]) + 2, len(result) + 1)
 
                 sh.update(list(zip(*result)), f"B3:{letter}")
+
+                sh.update(date_range, f'A{start_row_for_date}:A{end_row_for_date}')
+
+                sh.update(r, f'B{start_row}:{letter}')
+
+                update_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+                sh.update([[update_time]], "A19")
 
             send_message('Анализ конкурентов обновлен')
 
@@ -137,9 +141,5 @@ if __name__ == '__main__':
     data_article = get_articles()
 
     sheet = "Анализ конкурентов"
-
-    first_date = (datetime.now() - timedelta(days=14)).strftime("%Y-%m-%d")
-
-    second_date = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
 
     update_conc(data_article, sheet)
