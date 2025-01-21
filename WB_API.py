@@ -128,7 +128,7 @@ def fill_sheet(sheet, arts):
                         for size in sizes:
                             if not size.get("price") or size["origName"] != size_name:
                                 continue
-                            price = str(math.floor(size["price"]["total"] // 100 * 0.97))
+                            price = str(math.floor(size["price"]["total"] // 100 * 0.98))
                             time.sleep(1)
                             if price not in result:
                                 result.append(price)
