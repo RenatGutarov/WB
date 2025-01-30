@@ -1,15 +1,24 @@
+import os
+
 import requests
-lat = '55.7558'
+from datetime import datetime, timedelta
 
-lon = '37.6173'
+def get_temp():
+    lat = '55.7558'
+    lon = '37.6173'
+    api_key = os.getenv('API_WEATHER')
 
-api_key = '4213b32140601bf64cef176f3f5b2add'
 
-url = f'https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={api_key}/'
+    url = f'https://projecteol.ru/api/weather/?lat={lat}&lon={lon}&date={datetime.now()}&token={api_key}'
 
-response = requests.get(url)
 
-data = response.json()
+    response = requests.get(url)
 
-print(data)
+
+    data = response.json()
+    first_forecast = data[0]
+    temp_2_kelvin = first_forecast['temp_2']
+    temp_2_celsius = temp_2_kelvin - 273.15
+    return round(temp_2_celsius,2)
+
 

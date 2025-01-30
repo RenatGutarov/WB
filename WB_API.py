@@ -23,7 +23,7 @@ client = gspread.authorize(creds)
 slovar = {
     0: [
         [151784447, 158392610, 165972566, 165972565, 181283677],
-        [214791724, 214793869, 214799012, 214903622, 208934987],
+        [214791724, 214793869, 214799012, None, 208934987],
         [165374615, 168258699, 168259885, 176355393, 171232105],
         [145000904, 64274890, 160003929, None, None],
         [203597298, 195325187, 195918811, None, None],
@@ -37,7 +37,7 @@ slovar = {
         [None, 209621295, 218360469, None, None],
     ],
     1: [
-        [243117262, 228502034, 243180428, 243119074, 228502033, 243181642],
+        [243117262, 228502034, None, None, None, None],
         [168423784, 141940975, 159271393, 168423785, 152644637, 159271394],
         [None, 189027878, None, None, None, None],
         [None, None, None, None, None, None],
@@ -121,14 +121,13 @@ def fill_sheet(sheet, arts):
 
                     if response.status_code != 200:
                         continue
-
                     sizes = response.json()["data"]["products"][0]["sizes"]
                     result = []
                     for size_name in sizes_names:
                         for size in sizes:
                             if not size.get("price") or size["origName"] != size_name:
                                 continue
-                            price = str(math.floor(size["price"]["total"] // 100 * 0.98))
+                            price = str(math.floor(size["price"]["total"] // 100 )) # - убрал скидку ВБ Кошелька
                             time.sleep(1)
                             if price not in result:
                                 result.append(price)

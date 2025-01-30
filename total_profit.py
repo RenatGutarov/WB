@@ -7,6 +7,8 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from babel.dates import format_date
 from worksheet import Constants, get_sheet_yesterday, get_general
+from spp import spp_finder
+from meteo import get_temp
 
 sheet_name_denis = 'Прибыль LIVE Коротченков'
 
@@ -65,29 +67,29 @@ for ids in ids_danila:
         result = result[:-1].replace(',','.')
         revenue_saleprice_danila.append(float(result) / 100)
 
-ids_denis = ['b26','c26','d26','e26','f26','g26','h26','i26','j26','k26','l26','m26','n26','o26']
+ids_denis = ['b18','c18','d18','e18','f18','g18','h18','i18','j18','k18','l18','m18','n18','o18']
 
 for ids in ids_denis:
     result = get_sheet_yesterday(Constants.DENIS).acell(ids).value
 
-    if ids == 'b26' or ids == 'e26' or ids == 'l26' or ids == 'n26':
+    if ids == 'b18' or ids == 'e18' or ids == 'l18' or ids == 'n18':
         result = result[2:-3]
         result = result.replace('\xa0', '')
         revenue_saleprice_denis.append(int(result))
 
-    elif ids == 'c26':
+    elif ids == 'c18':
         revenue_saleprice_denis.append(int(result))
 
-    elif ids == 'd26' or ids == 'g26' or ids == 'h26' or ids == 'i26' or ids == 'j26':
+    elif ids == 'd18' or ids == 'g18' or ids == 'h18' or ids == 'i18' or ids == 'j18':
         result = result[:-4]
         result = int(result) / 100
         revenue_saleprice_denis.append(result)
 
 
-    elif ids == 'f26':
+    elif ids == 'f18':
         revenue_saleprice_denis.append(result[:-3])
 
-    elif ids == 'k26' or ids == 'm26' or ids == 'o26':
+    elif ids == 'k18' or ids == 'm18' or ids == 'o18':
         result = result[:-1].replace(',', '.')
         revenue_saleprice_denis.append(float(result) / 100)
 
@@ -95,7 +97,7 @@ print('Отчет ИП Грищенко:', revenue_saleprice_danila)
 print('Отчет ИП Коротченков:', revenue_saleprice_denis)
 
 for group in groups:
-    time = (datetime.now() - timedelta(days=2)).strftime("%Y-%m-%d")
+    time = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
 
     # second_url = 'https://mpstats.io/api/wb/get/identical?&path=151784447&fbs=1' - как появится client_sale брать отсюда
 
@@ -121,24 +123,29 @@ for group in groups:
         revenue_saleprice_denis.append(revenue)
         revenue_saleprice_denis.append(math.floor(sale_price))
 
-revenue_saleprice_danila.append(0.21)
-revenue_saleprice_danila.append(4)
+revenue_saleprice_danila.append(spp_finder()/100)
+revenue_saleprice_danila.append(get_temp())
 
-revenue_saleprice_denis.append(0.21)
-revenue_saleprice_denis.append(4)
+revenue_saleprice_denis.append(spp_finder()/100)
+revenue_saleprice_denis.append(get_temp())
 
 
 del revenue_saleprice_denis[16]
 del revenue_saleprice_denis[16]
+
+
 
 print('Отчет ИП Грищенко с рынками:', revenue_saleprice_danila)
 print('Отчет ИП Коротченков с рынком:', revenue_saleprice_denis)
 
-# sh_danila = get_general(Constants.DANILA)
-#
-# sh_denis = get_general(Constants.DENIS)
-#
-# sh_danila.insert_row(revenue_saleprice_danila,3)
 
+
+sh_danila = get_general(Constants.DANILA)
+
+sh_denis = get_general(Constants.DENIS)
+
+sh_danila.insert_row(revenue_saleprice_danila,3)
+
+sh_denis.insert_row(revenue_saleprice_denis,3)
 
 

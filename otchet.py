@@ -5,7 +5,7 @@ from messaging import send_message
 import re
 import math
 from worksheet import Constants, get_sheet_yesterday, get_delta
-
+from spp import spp_finder
 
 def otchet():
 
@@ -20,17 +20,17 @@ def otchet():
     ad_danila = worksheet_danila.acell('l38').value
     actions_danila = worksheet_danila.acell('s40').value
 
-    revenue_denis = worksheet_denis.acell('e26').value
-    profit_denis = worksheet_denis.acell('n26').value
-    profitability_denis = worksheet_denis.acell('o26').value
-    drr_denis = worksheet_denis.acell('m26').value
-    ad_denis = worksheet_denis.acell('l26').value
-    actions_denis = worksheet_denis.acell('s28').value
+    revenue_denis = worksheet_denis.acell('e18').value
+    profit_denis = worksheet_denis.acell('n18').value
+    profitability_denis = worksheet_denis.acell('o18').value
+    drr_denis = worksheet_denis.acell('m18').value
+    ad_denis = worksheet_denis.acell('l18').value
+    actions_denis = worksheet_denis.acell('s18').value
 
     delta_sheet_danila = get_delta(Constants.DANILA)
     delta_sheet_denis = get_delta(Constants.DENIS)
     profit_yesterday_danila = delta_sheet_danila.acell('n38').value
-    profit_yesterday_denis = delta_sheet_denis.acell('n26').value
+    profit_yesterday_denis = delta_sheet_denis.acell('n18').value
 
 
     data_old_two_ip = [revenue_danila, profit_danila, revenue_denis, profit_denis, profit_yesterday_danila, profit_yesterday_denis]
@@ -57,6 +57,7 @@ def otchet():
     sum_of_profits_yesterday = data_new_two_ip[4] + data_new_two_ip[5]
 
     delta_yesterday = final_profit - sum_of_profits_yesterday
+    spp = spp_finder()
 
 
     if actions_danila is not None and actions_denis is not None and delta_yesterday < 0:
@@ -83,10 +84,10 @@ def otchet():
 🌹 Дельта = {delta_yesterday}.р
 💎 В. РЕНТА = {final_profitability}%
 💣 ДРР = {final_drr}%
- СПП БЫЛ = 21%
+ СПП БЫЛ = {spp}%
 ''')
 
-    elif actions_denis is not None and actions_denis is not None and delta_yesterday > 0:
+    elif actions_danila is not None and actions_denis is not None and delta_yesterday > 0:
         send_message(f'''
 Грищенко
 💰 ВЫРУЧКА = {data_new_two_ip[0]}.р
@@ -110,7 +111,7 @@ def otchet():
 🍀 Дельта = {delta_yesterday}.р
 💎 В. РЕНТА = {final_profitability}%
 💣 ДРР = {final_drr}%
- СПП БЫЛ = 21%
+ СПП БЫЛ = {spp}%
 ''')
 
     elif actions_danila is None and actions_denis is not None and delta_yesterday < 0:
@@ -137,7 +138,7 @@ def otchet():
 🌹 Дельта = {delta_yesterday}.р
 💎 В. РЕНТА = {final_profitability}%
 💣 ДРР = {final_drr}%
- СПП БЫЛ = 21%
+ СПП БЫЛ = {spp}%
 ''')
     elif actions_danila is None and actions_denis is not None and delta_yesterday > 0:
         send_message(
@@ -163,7 +164,7 @@ def otchet():
 🍀 Дельта = {delta_yesterday}.р
 💎 В. РЕНТА = {final_profitability}%
 💣 ДРР = {final_drr}%
- СПП БЫЛ = 21%
+ СПП БЫЛ = {spp}%
 ''')
 
     elif actions_denis is None and actions_danila is not None and delta_yesterday < 0:
@@ -191,7 +192,7 @@ def otchet():
 🌹 Дельта = {delta_yesterday}.р
 💎 В. РЕНТА = {final_profitability}%
 💣 ДРР = {final_drr}%
- СПП БЫЛ = 21%
+ СПП БЫЛ = {spp}%
 ''')
     elif actions_denis is None and actions_danila is not None and delta_yesterday > 0:
         send_message(
@@ -218,7 +219,7 @@ def otchet():
 🍀 Дельта = {delta_yesterday}.р
 💎 В. РЕНТА = {final_profitability}%
 💣 ДРР = {final_drr}%
- СПП БЫЛ = 21%
+ СПП БЫЛ = {spp}%
 ''')
 
     elif actions_danila is None and actions_denis is None and delta_yesterday < 0:
@@ -246,7 +247,7 @@ f'''
 🌹 Дельта = {delta_yesterday}.р
 💎 В. РЕНТА = {final_profitability}%
 💣 ДРР = {final_drr}%
- СПП БЫЛ = 21%
+ СПП БЫЛ = {spp}%
 ''')
     elif actions_danila is None  and actions_denis is None and delta_yesterday > 0:
         send_message(
@@ -273,5 +274,6 @@ f'''
 🍀 Дельта = {delta_yesterday}.р
 💎 В. РЕНТА = {final_profitability}%
 💣 ДРР = {final_drr}%
- СПП БЫЛ = 21%
+ СПП БЫЛ = {spp}%
 ''')
+

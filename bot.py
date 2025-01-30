@@ -25,7 +25,7 @@ def process_report_view_danila():
         return value
 
 def process_report_view_denis():
-    value = get_sheet(Constants.DENIS).acell('s28').value
+    value = get_sheet(Constants.DENIS).acell('s18').value
     if value is not None:
         return value
     else:
@@ -83,7 +83,7 @@ def prices_and_reports(call):
         bot.register_next_step_handler(call.message,process_report_denis)
 
     elif call.data == 'report delete denis':
-        get_sheet(Constants.DENIS).batch_clear(['s28'])
+        get_sheet(Constants.DENIS).batch_clear(['s18'])
         bot.send_message(call.message.chat.id,'Ячейка очищена',reply_markup=markup_report_denis)
 
     elif call.data == 'report add denis':
@@ -100,19 +100,19 @@ def prices_and_reports(call):
 
 def process_report_denis(message):
     user_input = message.text
-    get_sheet(Constants.DENIS).update([[user_input]],'s28')
+    get_sheet(Constants.DENIS).update([[user_input]],'s18')
     bot.send_message(message.chat.id,'Данные добавлены в таблицу!',reply_markup=markup_report_denis)
 
 def process_report_add_denis(message):
     user_input = message.text
-    current_value = get_sheet(Constants.DENIS).acell('s28').value
+    current_value = get_sheet(Constants.DENIS).acell('s18').value
     if current_value is not None:
         update_value = f'{current_value}, {user_input}'
-        get_sheet(Constants.DENIS).update([[update_value]], 's28')
+        get_sheet(Constants.DENIS).update([[update_value]], 's18')
         bot.send_message(message.chat.id, 'Добавлено!',reply_markup = markup_report_denis)
     else:
         update_value = f'{user_input}'
-        get_sheet(Constants.DENIS).update([[update_value]], 's28')
+        get_sheet(Constants.DENIS).update([[update_value]], 's18')
         bot.send_message(message.chat.id, 'Добавлено!',reply_markup= markup_report_denis)
 
 def process_report_danila(message):
