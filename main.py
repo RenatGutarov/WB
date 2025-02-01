@@ -1,11 +1,13 @@
 import time
-from MPSTATS_API import update_conc
+from MPSTATS_API import update_conc,sheet
 from WB_API import update_prices, slovar
 from otchet import otchet
 import schedule
 from base_info import get_articles
+from total_profit import process_rows,rows_denis,rows_danila
+import gspread
+from worksheet import get_general, Constants
 
-sheet = 'Анализ конкурентов'
 
 
 
@@ -20,7 +22,18 @@ def main_def():
 
     update_prices(slovar)
 
-schedule.every().day.at('11:30').do(main_def)
+    result_danila = process_rows(rows_danila)
+
+    get_general(Constants.DANILA).insert_row(result_danila, 3)
+
+    result_denis = process_rows(rows_denis)
+
+    del result_denis [16:18]
+
+    get_general(Constants.DENIS).insert_row(result_denis, 3)
+
+
+schedule.every().day.at('12:18').do(main_def)
 
 
 

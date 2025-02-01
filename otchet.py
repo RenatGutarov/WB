@@ -1,16 +1,14 @@
+from total_profit import process_rows,rows_denis,rows_danila
 import gspread
-from oauth2client.service_account import ServiceAccountCredentials
-from datetime import datetime, timedelta
 from messaging import send_message
 import re
 import math
 from worksheet import Constants, get_sheet_yesterday, get_delta
 from spp import spp_finder
 
+
 def otchet():
-
     worksheet_danila = get_sheet_yesterday(Constants.DANILA)
-
     worksheet_denis = get_sheet_yesterday(Constants.DENIS)
 
     revenue_danila = worksheet_danila.acell('e38').value
@@ -31,7 +29,6 @@ def otchet():
     delta_sheet_denis = get_delta(Constants.DENIS)
     profit_yesterday_danila = delta_sheet_danila.acell('n38').value
     profit_yesterday_denis = delta_sheet_denis.acell('n18').value
-
 
     data_old_two_ip = [revenue_danila, profit_danila, revenue_denis, profit_denis, profit_yesterday_danila, profit_yesterday_denis]
     data_new_two_ip = []
@@ -59,221 +56,218 @@ def otchet():
     delta_yesterday = final_profit - sum_of_profits_yesterday
     spp = spp_finder()
 
-
     if actions_danila is not None and actions_denis is not None and delta_yesterday < 0:
         send_message(f'''
-Грищенко
-💰 ВЫРУЧКА = {data_new_two_ip[0]}.р
-💵 В. ПРИБЫЛЬ = {data_new_two_ip[1]}.р
-💎 В. РЕНТА = {profitability_danila}
-💣 ДРР = {drr_danila}
-Что сделали вчера:
-{actions_danila}
-        
-Коротченков
-💰 ВЫРУЧКА = {data_new_two_ip[2]}.р
-💵 В. ПРИБЫЛЬ = {data_new_two_ip[3]}.р
-💎 В. РЕНТА = {profitability_denis}
-💣 ДРР = {drr_denis}
-Что сделали вчера:
-{actions_denis}
-    
-ИТОГО
-💰 ВЫРУЧКА = {final_revenue}.р
-💵 В. ПРИБЫЛЬ = {final_profit}.р
-🌹 Дельта = {delta_yesterday}.р
-💎 В. РЕНТА = {final_profitability}%
-💣 ДРР = {final_drr}%
- СПП БЫЛ = {spp}%
-''')
+ Грищенко
+ 💰 ВЫРУЧКА = {data_new_two_ip[0]}.р
+ 💵 В. ПРИБЫЛЬ = {data_new_two_ip[1]}.р
+ 💎 В. РЕНТА = {profitability_danila}
+ 💣 ДРР = {drr_danila}
+ Что сделали вчера:
+ {actions_danila}
+
+ Коротченков
+ 💰 ВЫРУЧКА = {data_new_two_ip[2]}.р
+ 💵 В. ПРИБЫЛЬ = {data_new_two_ip[3]}.р
+ 💎 В. РЕНТА = {profitability_denis}
+ 💣 ДРР = {drr_denis}
+ Что сделали вчера:
+ {actions_denis}
+
+ ИТОГО
+ 💰 ВЫРУЧКА = {final_revenue}.р
+ 💵 В. ПРИБЫЛЬ = {final_profit}.р
+ 🌹 Дельта = {delta_yesterday}.р
+ 💎 В. РЕНТА = {final_profitability}%
+ 💣 ДРР = {final_drr}%
+  СПП БЫЛ = {spp}%
+ ''')
 
     elif actions_danila is not None and actions_denis is not None and delta_yesterday > 0:
         send_message(f'''
-Грищенко
-💰 ВЫРУЧКА = {data_new_two_ip[0]}.р
-💵 В. ПРИБЫЛЬ = {data_new_two_ip[1]}.р
-💎 В. РЕНТА = {profitability_danila}
-💣 ДРР = {drr_danila}
-Что сделали вчера:
-{actions_danila}
+ Грищенко
+ 💰 ВЫРУЧКА = {data_new_two_ip[0]}.р
+ 💵 В. ПРИБЫЛЬ = {data_new_two_ip[1]}.р
+ 💎 В. РЕНТА = {profitability_danila}
+ 💣 ДРР = {drr_danila}
+ Что сделали вчера:
+ {actions_danila}
 
-Коротченков
-💰 ВЫРУЧКА = {data_new_two_ip[2]}.р
-💵 В. ПРИБЫЛЬ = {data_new_two_ip[3]}.р
-💎 В. РЕНТА = {profitability_denis}
-💣 ДРР = {drr_denis}
-Что сделали вчера:
-{actions_denis}
+ Коротченков
+ 💰 ВЫРУЧКА = {data_new_two_ip[2]}.р
+ 💵 В. ПРИБЫЛЬ = {data_new_two_ip[3]}.р
+ 💎 В. РЕНТА = {profitability_denis}
+ 💣 ДРР = {drr_denis}
+ Что сделали вчера:
+ {actions_denis}
 
-ИТОГО
-💰 ВЫРУЧКА = {final_revenue}.р
-💵 В. ПРИБЫЛЬ = {final_profit}.р
-🍀 Дельта = {delta_yesterday}.р
-💎 В. РЕНТА = {final_profitability}%
-💣 ДРР = {final_drr}%
- СПП БЫЛ = {spp}%
-''')
+ ИТОГО
+ 💰 ВЫРУЧКА = {final_revenue}.р
+ 💵 В. ПРИБЫЛЬ = {final_profit}.р
+ 🍀 Дельта = {delta_yesterday}.р
+ 💎 В. РЕНТА = {final_profitability}%
+ 💣 ДРР = {final_drr}%
+  СПП БЫЛ = {spp}%
+ ''')
 
     elif actions_danila is None and actions_denis is not None and delta_yesterday < 0:
-        send_message(
-            f'''
-Грищенко
-💰 ВЫРУЧКА = {data_new_two_ip[0]}.р
-💵 В. ПРИБЫЛЬ = {data_new_two_ip[1]}.р
-💎 В. РЕНТА = {profitability_danila}
-💣 ДРР = {drr_danila}
-Что сделали вчера:
-    
-Коротченков
-💰 ВЫРУЧКА = {data_new_two_ip[2]}.р
-💵 В. ПРИБЫЛЬ = {data_new_two_ip[3]}.р
-💎 В. РЕНТА = {profitability_denis}
-💣 ДРР = {drr_denis}
-Что сделали вчера:
-{actions_denis}
-    
-ИТОГО
-💰 ВЫРУЧКА = {final_revenue}.р
-💵 В. ПРИБЫЛЬ = {final_profit}.р
-🌹 Дельта = {delta_yesterday}.р
-💎 В. РЕНТА = {final_profitability}%
-💣 ДРР = {final_drr}%
- СПП БЫЛ = {spp}%
-''')
+        send_message(f'''
+ Грищенко
+ 💰 ВЫРУЧКА = {data_new_two_ip[0]}.р
+ 💵 В. ПРИБЫЛЬ = {data_new_two_ip[1]}.р
+ 💎 В. РЕНТА = {profitability_danila}
+ 💣 ДРР = {drr_danila}
+ Что сделали вчера:
+
+ Коротченков
+ 💰 ВЫРУЧКА = {data_new_two_ip[2]}.р
+ 💵 В. ПРИБЫЛЬ = {data_new_two_ip[3]}.р
+ 💎 В. РЕНТА = {profitability_denis}
+ 💣 ДРР = {drr_denis}
+ Что сделали вчера:
+ {actions_denis}
+
+ ИТОГО
+ 💰 ВЫРУЧКА = {final_revenue}.р
+ 💵 В. ПРИБЫЛЬ = {final_profit}.р
+ 🌹 Дельта = {delta_yesterday}.р
+ 💎 В. РЕНТА = {final_profitability}%
+ 💣 ДРР = {final_drr}%
+  СПП БЫЛ = {spp}%
+ ''')
+
     elif actions_danila is None and actions_denis is not None and delta_yesterday > 0:
-        send_message(
-            f'''
-Грищенко
-💰 ВЫРУЧКА = {data_new_two_ip[0]}.р
-💵 В. ПРИБЫЛЬ = {data_new_two_ip[1]}.р
-💎 В. РЕНТА = {profitability_danila}
-💣 ДРР = {drr_danila}
-Что сделали вчера:
+        send_message(f'''
+ Грищенко
+ 💰 ВЫРУЧКА = {data_new_two_ip[0]}.р
+ 💵 В. ПРИБЫЛЬ = {data_new_two_ip[1]}.р
+ 💎 В. РЕНТА = {profitability_danila}
+ 💣 ДРР = {drr_danila}
+ Что сделали вчера:
+ {actions_danila}
 
-Коротченков
-💰 ВЫРУЧКА = {data_new_two_ip[2]}.р
-💵 В. ПРИБЫЛЬ = {data_new_two_ip[3]}.р
-💎 В. РЕНТА = {profitability_denis}
-💣 ДРР = {drr_denis}
-Что сделали вчера:
-{actions_denis}
+ Коротченков
+ 💰 ВЫРУЧКА = {data_new_two_ip[2]}.р
+ 💵 В. ПРИБЫЛЬ = {data_new_two_ip[3]}.р
+ 💎 В. РЕНТА = {profitability_denis}
+ 💣 ДРР = {drr_denis}
+ Что сделали вчера:
+ {actions_denis}
 
-ИТОГО
-💰 ВЫРУЧКА = {final_revenue}.р
-💵 В. ПРИБЫЛЬ = {final_profit}.р
-🍀 Дельта = {delta_yesterday}.р
-💎 В. РЕНТА = {final_profitability}%
-💣 ДРР = {final_drr}%
- СПП БЫЛ = {spp}%
-''')
+ ИТОГО
+ 💰 ВЫРУЧКА = {final_revenue}.р
+ 💵 В. ПРИБЫЛЬ = {final_profit}.р
+ 🍀 Дельта = {delta_yesterday}.р
+ 💎 В. РЕНТА = {final_profitability}%
+ 💣 ДРР = {final_drr}%
+  СПП БЫЛ = {spp}%
+ ''')
 
     elif actions_denis is None and actions_danila is not None and delta_yesterday < 0:
-        send_message(
-            f'''
-Грищенко
-💰 ВЫРУЧКА = {data_new_two_ip[0]}.р
-💵 В. ПРИБЫЛЬ = {data_new_two_ip[1]}.р
-💎 В. РЕНТА = {profitability_danila}
-💣 ДРР = {drr_danila}
-Что сделали вчера:
-{actions_danila}
-    
-Коротченков
-💰 ВЫРУЧКА = {data_new_two_ip[2]}.р
-💵 В. ПРИБЫЛЬ = {data_new_two_ip[3]}.р
-💎 В. РЕНТА = {profitability_denis}
-💣 ДРР = {drr_denis}
-Что сделали вчера:
-    
-    
-ИТОГО
-💰 ВЫРУЧКА = {final_revenue}.р
-💵 В. ПРИБЫЛЬ = {final_profit}.р
-🌹 Дельта = {delta_yesterday}.р
-💎 В. РЕНТА = {final_profitability}%
-💣 ДРР = {final_drr}%
- СПП БЫЛ = {spp}%
-''')
+        send_message(f'''
+ Грищенко
+ 💰 ВЫРУЧКА = {data_new_two_ip[0]}.р
+ 💵 В. ПРИБЫЛЬ = {data_new_two_ip[1]}.р
+ 💎 В. РЕНТА = {profitability_danila}
+ 💣 ДРР = {drr_danila}
+ Что сделали вчера:
+ {actions_danila}
+
+ Коротченков
+ 💰 ВЫРУЧКА = {data_new_two_ip[2]}.р
+ 💵 В. ПРИБЫЛЬ = {data_new_two_ip[3]}.р
+ 💎 В. РЕНТА = {profitability_denis}
+ 💣 ДРР = {drr_denis}
+ Что сделали вчера:
+
+ ИТОГО
+ 💰 ВЫРУЧКА = {final_revenue}.р
+ 💵 В. ПРИБЫЛЬ = {final_profit}.р
+ 🌹 Дельта = {delta_yesterday}.р
+ 💎 В. РЕНТА = {final_profitability}%
+ 💣 ДРР = {final_drr}%
+  СПП БЫЛ = {spp}%
+ ''')
+
     elif actions_denis is None and actions_danila is not None and delta_yesterday > 0:
-        send_message(
-            f'''
-Грищенко
-💰 ВЫРУЧКА = {data_new_two_ip[0]}.р
-💵 В. ПРИБЫЛЬ = {data_new_two_ip[1]}.р
-💎 В. РЕНТА = {profitability_danila}
-💣 ДРР = {drr_danila}
-Что сделали вчера:
-{actions_danila}
+        send_message(f'''
+ Грищенко
+ 💰 ВЫРУЧКА = {data_new_two_ip[0]}.р
+ 💵 В. ПРИБЫЛЬ = {data_new_two_ip[1]}.р
+ 💎 В. РЕНТА = {profitability_danila}
+ 💣 ДРР = {drr_danila}
+ Что сделали вчера:
+ {actions_danila}
 
-Коротченков
-💰 ВЫРУЧКА = {data_new_two_ip[2]}.р
-💵 В. ПРИБЫЛЬ = {data_new_two_ip[3]}.р
-💎 В. РЕНТА = {profitability_denis}
-💣 ДРР = {drr_denis}
-Что сделали вчера:
+ Коротченков
+ 💰 ВЫРУЧКА = {data_new_two_ip[2]}.р
+ 💵 В. ПРИБЫЛЬ = {data_new_two_ip[3]}.р
+ 💎 В. РЕНТА = {profitability_denis}
+ 💣 ДРР = {drr_denis}
+ Что сделали вчера:
 
-
-ИТОГО
-💰 ВЫРУЧКА = {final_revenue}.р
-💵 В. ПРИБЫЛЬ = {final_profit}.р
-🍀 Дельта = {delta_yesterday}.р
-💎 В. РЕНТА = {final_profitability}%
-💣 ДРР = {final_drr}%
- СПП БЫЛ = {spp}%
-''')
+ ИТОГО
+ 💰 ВЫРУЧКА = {final_revenue}.р
+ 💵 В. ПРИБЫЛЬ = {final_profit}.р
+ 🍀 Дельта = {delta_yesterday}.р
+ 💎 В. РЕНТА = {final_profitability}%
+ 💣 ДРР = {final_drr}%
+  СПП БЫЛ = {spp}%
+ ''')
 
     elif actions_danila is None and actions_denis is None and delta_yesterday < 0:
-        send_message(
-f'''
-Грищенко
-💰 ВЫРУЧКА = {data_new_two_ip[0]}.р
-💵 В. ПРИБЫЛЬ = {data_new_two_ip[1]}.р
-💎 В. РЕНТА = {profitability_danila}
-💣 ДРР = {drr_danila}
-Что сделали вчера:
-            
+        send_message(f'''
+ Грищенко
+ 💰 ВЫРУЧКА = {data_new_two_ip[0]}.р
+ 💵 В. ПРИБЫЛЬ = {data_new_two_ip[1]}.р
+ 💎 В. РЕНТА = {profitability_danila}
+ 💣 ДРР = {drr_danila}
+ Что сделали вчера:
 
-Коротченков
-💰 ВЫРУЧКА = {data_new_two_ip[2]}.р
-💵 В. ПРИБЫЛЬ = {data_new_two_ip[3]}.р
-💎 В. РЕНТА = {profitability_denis}
-💣 ДРР = {drr_denis}
-Что сделали вчера:
+ Коротченков
+ 💰 ВЫРУЧКА = {data_new_two_ip[2]}.р
+ 💵 В. ПРИБЫЛЬ = {data_new_two_ip[3]}.р
+ 💎 В. РЕНТА = {profitability_denis}
+ 💣 ДРР = {drr_denis}
+ Что сделали вчера:
+
+ ИТОГО
+ 💰 ВЫРУЧКА = {final_revenue}.р
+ 💵 В. ПРИБЫЛЬ = {final_profit}.р
+ 🌹 Дельта = {delta_yesterday}.р
+ 💎 В. РЕНТА = {final_profitability}%
+ 💣 ДРР = {final_drr}%
+  СПП БЫЛ = {spp}%
+ ''')
+
+    elif actions_danila is None and actions_denis is None and delta_yesterday > 0:
+        send_message(f'''
+ Грищенко
+ 💰 ВЫРУЧКА = {data_new_two_ip[0]}.р
+ 💵 В. ПРИБЫЛЬ = {data_new_two_ip[1]}.р
+ 💎 В. РЕНТА = {profitability_danila}
+ 💣 ДРР = {drr_danila}
+ Что сделали вчера:
+
+ Коротченков
+ 💰 ВЫРУЧКА = {data_new_two_ip[2]}.р
+ 💵 В. ПРИБЫЛЬ = {data_new_two_ip[3]}.р
+ 💎 В. РЕНТА = {profitability_denis}
+ 💣 ДРР = {drr_denis}
+ Что сделали вчера:
+
+ ИТОГО
+ 💰 ВЫРУЧКА = {final_revenue}.р
+ 💵 В. ПРИБЫЛЬ = {final_profit}.р
+ 🍀 Дельта = {delta_yesterday}.р
+ 💎 В. РЕНТА = {final_profitability}%
+ 💣 ДРР = {final_drr}%
+  СПП БЫЛ = {spp}%
+ ''')
 
 
-ИТОГО
-💰 ВЫРУЧКА = {final_revenue}.р
-💵 В. ПРИБЫЛЬ = {final_profit}.р
-🌹 Дельта = {delta_yesterday}.р
-💎 В. РЕНТА = {final_profitability}%
-💣 ДРР = {final_drr}%
- СПП БЫЛ = {spp}%
-''')
-    elif actions_danila is None  and actions_denis is None and delta_yesterday > 0:
-        send_message(
-            f'''
-Грищенко
-💰 ВЫРУЧКА = {data_new_two_ip[0]}.р
-💵 В. ПРИБЫЛЬ = {data_new_two_ip[1]}.р
-💎 В. РЕНТА = {profitability_danila}
-💣 ДРР = {drr_danila}
-Что сделали вчера:
 
 
-Коротченков
-💰 ВЫРУЧКА = {data_new_two_ip[2]}.р
-💵 В. ПРИБЫЛЬ = {data_new_two_ip[3]}.р
-💎 В. РЕНТА = {profitability_denis}
-💣 ДРР = {drr_denis}
-Что сделали вчера:
 
 
-ИТОГО
-💰 ВЫРУЧКА = {final_revenue}.р
-💵 В. ПРИБЫЛЬ = {final_profit}.р
-🍀 Дельта = {delta_yesterday}.р
-💎 В. РЕНТА = {final_profitability}%
-💣 ДРР = {final_drr}%
- СПП БЫЛ = {spp}%
-''')
 

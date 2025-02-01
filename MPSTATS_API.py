@@ -11,6 +11,7 @@ from base_info import get_articles
 
 load_dotenv()
 
+sheet = "Анализ конкурентов"
 
 scope = [
     "https://www.googleapis.com/auth/spreadsheets",
