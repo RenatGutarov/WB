@@ -10,7 +10,6 @@ from worksheet import Constants, get_sheet_yesterday, get_general
 from spp import spp_finder
 from meteo import get_temp
 
-sheet_name_denis = 'Прибыль LIVE Коротченков'
 
 scope = [
     "https://www.googleapis.com/auth/spreadsheets",
@@ -21,131 +20,145 @@ creds = ServiceAccountCredentials.from_json_keyfile_name("google_keys.json", sco
 
 client = gspread.authorize(creds)
 
-
 load_dotenv()
 
-groups = ['57','162']
+sh_danila_get = get_sheet_yesterday(Constants.DANILA)
 
-revenue_saleprice_danila= []
+sh_denis_get = get_sheet_yesterday(Constants.DENIS)
 
-revenue_saleprice_denis = []
+rows_danila = sh_danila_get.get('1:100')
 
-time= (datetime.now() - timedelta(days=1)).strftime("%d.%m.%Y")
+rows_denis = sh_denis_get.get('1:100')
 
-revenue_saleprice_danila.append(time)
-revenue_saleprice_denis.append(time)
+def process_rows(rows):
+    result = []
+    time = (datetime.now() - timedelta(days=1)).strftime("%d.%m.%Y")
+    result.append(time)
+    previous_day = (datetime.now() - timedelta(days=1))
+    day_of_week = format_date(previous_day, format='EEEE', locale='ru_RU')
+    result.append(day_of_week)
+    for row in rows:
+        if 'ИТОГО' in row:
+            # Находим индекс 'ИТОГО' и берем следующий элемент
+            index = row.index('ИТОГО')
+            if (index + 1 < len(row) and
+                    index + 2 < len(row) and
+                    index + 3 < len(row) and
+                    index + 4 < len(row) and
+                    index + 5 < len(row) and
+                    index + 6 < len(row) and
+                    index + 7 < len(row) and
+                    index + 8 < len(row) and
+                    index + 9 < len(row) and
+                    index + 10 < len(row) and
+                    index + 11 < len(row) and
+                    index + 12 < len(row) and
+                    index + 13 < len(row) and
+                    index + 14 < len(row)
+            ):
+                # Заказы
+                revenue_str = row[index + 1]
+                revenue_str = revenue_str[2:-3]
+                revenue_str_cleaned = revenue_str.replace('\xa0', '').strip()
+                result.append(int(revenue_str_cleaned))
+                # Штуки
+                pieces = row[index + 2]
+                pieces = int(pieces)
+                result.append(pieces)
+                # ПВ
+                procent = row[index + 3]
+                procent = procent[:-4]
+                procent = int(procent) / 100
+                result.append(procent)
+                # Выкупят
+                revenue_str4 = row[index + 4]
+                revenue_str4 = revenue_str4[2:-3]
+                revenue_str_cleaned = revenue_str4.replace('\xa0', '').strip()
+                result.append(int(revenue_str_cleaned))
+                # Выкупят штук
+                will_buy = row[index + 5]
+                will_buy = will_buy[:-3]
+                result.append(will_buy)
+                # Себес
+                cost_price_proc = row[index + 6]
+                cost_price_proc = cost_price_proc[:-4]
+                cost_price_proc = int(cost_price_proc) / 100
+                result.append(cost_price_proc)
+                # Комиссия
+                commission = row[index + 7]
+                commission = commission[:-4]
+                commission = int(commission) / 100
+                result.append(commission)
+                # Логистика
+                logistic = row[index + 8]
+                logistic = logistic[:-4]
+                logistic = int(logistic) / 100
+                result.append(logistic)
+                # Налог
+                tax = row[index + 9]
+                tax = tax[:-4]
+                tax = int(tax) / 100
+                result.append(tax)
+                # Хранение
+                storage = row[index + 10]
+                storage = storage[:-1].replace(',', '.')
+                result.append(float(storage) / 100)
+                # Реклама
+                add = row[index + 11]
+                add = add[2:-3]
+                add = add.replace('\xa0', '').strip()
+                result.append(int(add))
+                # DRR
+                drr = row[index + 12]
+                drr = drr[:-1].replace(',', '.')
+                result.append(float(drr) / 100)
+                # Прибыль
+                profit = row[index + 13]
+                profit = profit[2:-3]
+                profit = profit.replace('\xa0', '')
+                result.append(int(profit))
+                # Рентабельность
+                profitability = row[index + 14]
+                profitability = profitability[:-1].replace(',', '.')
+                result.append(float(profitability) / 100)
 
-previous_day = (datetime.now() - timedelta(days=1))
+    groups = ['57','162']
 
-day_of_week = format_date(previous_day, format='EEEE', locale='ru_RU')
+    for group in groups:
+        print(f'Началась группа {group}')
+        time = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
 
-revenue_saleprice_danila.append(day_of_week)
-revenue_saleprice_denis.append(day_of_week)
+    # #     # second_url = 'https://mpstats.io/api/wb/get/identical?&path=151784447&fbs=1' - как появится client_sale брать отсюда
 
-ids_danila = ['b38','c38','d38','e38','f38','g38','h38','i38','j38','k38','l38','m38','n38','o38',]
+        main_url = f'https://mpstats.io/api/wb/get/subject/by_date?groupBy=day&path={group}'
 
-for ids in ids_danila:
-    result = get_sheet_yesterday(Constants.DANILA).acell(ids).value
+        params = {"d1": time, "d2": time}
 
-    if ids == 'b38' or ids == 'e38' or ids == 'l38' or ids == 'n38':
-        result = result[2:-3]
-        result = result.replace('\xa0', '')
-        revenue_saleprice_danila.append(int(result))
+        header = {
+          "Content-Type": "application/json",
+          "X-Mpstats-TOKEN": os.getenv('XMPSTASTOKEN')
+        }
 
-    elif ids == 'c38':
-        revenue_saleprice_danila.append(int(result))
+        response = requests.get(url=main_url,headers=header, params = params)
+        print(response)
+    # #     # response2 = requests.get(url = second_url, headers=header,params = params)
+    # #     # print(response2.json())
+        data = response.json()
 
-    elif ids == 'd38' or ids == 'g38' or ids == 'h38' or ids == 'i38' or ids == 'j38':
-        result = result[:-4]
-        result = int(result) / 100
-        revenue_saleprice_danila.append(result)
+        for index,item in enumerate(data):
+              revenue = item['revenue']
+              sale_price = item['avg_sale_price']
+              result.append(revenue)
+              result.append(math.floor(sale_price))
+    result.append(spp_finder() / 100)
+    result.append(get_temp())
 
-    elif ids == 'f38':
-        revenue_saleprice_danila.append(result[:-3])
-
-    elif ids == 'k38' or ids == 'm38' or ids == 'o38':
-        result = result[:-1].replace(',','.')
-        revenue_saleprice_danila.append(float(result) / 100)
-
-ids_denis = ['b18','c18','d18','e18','f18','g18','h18','i18','j18','k18','l18','m18','n18','o18']
-
-for ids in ids_denis:
-    result = get_sheet_yesterday(Constants.DENIS).acell(ids).value
-
-    if ids == 'b18' or ids == 'e18' or ids == 'l18' or ids == 'n18':
-        result = result[2:-3]
-        result = result.replace('\xa0', '')
-        revenue_saleprice_denis.append(int(result))
-
-    elif ids == 'c18':
-        revenue_saleprice_denis.append(int(result))
-
-    elif ids == 'd18' or ids == 'g18' or ids == 'h18' or ids == 'i18' or ids == 'j18':
-        result = result[:-4]
-        result = int(result) / 100
-        revenue_saleprice_denis.append(result)
-
-
-    elif ids == 'f18':
-        revenue_saleprice_denis.append(result[:-3])
-
-    elif ids == 'k18' or ids == 'm18' or ids == 'o18':
-        result = result[:-1].replace(',', '.')
-        revenue_saleprice_denis.append(float(result) / 100)
-
-print('Отчет ИП Грищенко:', revenue_saleprice_danila)
-print('Отчет ИП Коротченков:', revenue_saleprice_denis)
-
-for group in groups:
-    time = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
-
-    # second_url = 'https://mpstats.io/api/wb/get/identical?&path=151784447&fbs=1' - как появится client_sale брать отсюда
-
-    main_url = f'https://mpstats.io/api/wb/get/subject/by_date?groupBy=day&path={group}'
-
-    params = {"d1": time, "d2": time}
-
-    header = {
-    "Content-Type": "application/json",
-    "X-Mpstats-TOKEN": os.getenv('XMPSTASTOKEN')
-    }
-
-    response = requests.get(url=main_url,headers=header, params = params)
-    # response2 = requests.get(url = second_url, headers=header,params = params)
-    # print(response2.json())
-    data = response.json()
-
-    for index,item in enumerate(data):
-        revenue = item['revenue']
-        sale_price = item['avg_sale_price']
-        revenue_saleprice_danila.append(revenue)
-        revenue_saleprice_danila.append(math.floor(sale_price))
-        revenue_saleprice_denis.append(revenue)
-        revenue_saleprice_denis.append(math.floor(sale_price))
-
-revenue_saleprice_danila.append(spp_finder()/100)
-revenue_saleprice_danila.append(get_temp())
-
-revenue_saleprice_denis.append(spp_finder()/100)
-revenue_saleprice_denis.append(get_temp())
-
-
-del revenue_saleprice_denis[16]
-del revenue_saleprice_denis[16]
+    return result
 
 
 
-print('Отчет ИП Грищенко с рынками:', revenue_saleprice_danila)
-print('Отчет ИП Коротченков с рынком:', revenue_saleprice_denis)
 
 
 
-sh_danila = get_general(Constants.DANILA)
-
-sh_denis = get_general(Constants.DENIS)
-
-sh_danila.insert_row(revenue_saleprice_danila,3)
-
-sh_denis.insert_row(revenue_saleprice_denis,3)
 
 
