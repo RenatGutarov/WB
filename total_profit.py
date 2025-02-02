@@ -156,6 +156,28 @@ def process_rows(rows):
     return result
 
 
+def process_rows_delta(rows):
+    result = []
+    for row in rows:
+        if 'ИТОГО' in row:
+            index = row.index('ИТОГО')
+            if index + 13 < len(row):
+                profit = row[index + 13]
+                profit = profit[2:-3]
+                profit = profit.replace('\xa0', '')
+                result.append(int(profit))
+    return result
+
+
+def process_rows_actions(rows):
+    result = []
+    for row in rows:
+        if 'Общая картина действий' in row:
+            index = row.index('Общая картина действий')
+            if index + 1 < len(row):
+                actions = row[index + 1]
+                result.append(actions)
+    return result
 
 
 
