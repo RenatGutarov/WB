@@ -1,4 +1,4 @@
-from total_profit import process_rows, rows_denis, rows_danila, process_rows_delta, process_rows_actions
+from total_profit import process_rows, process_rows_delta, process_rows_actions, get_data
 import gspread
 from messaging import send_message
 import re
@@ -7,7 +7,7 @@ from worksheet import Constants, get_sheet_yesterday, get_delta
 from spp import spp_finder
 
 def otchet():
-    danila = process_rows(rows_danila)
+    danila = process_rows(get_data(Constants.DANILA))
 
     keys = [
          'date', 'day_of_week', 'revenue', 'pieces', 'procent',
@@ -17,7 +17,7 @@ def otchet():
          'pjms_checs', 'spp', 'temp'
     ]
 
-    denis = process_rows(rows_denis)
+    denis = process_rows(get_data(Constants.DENIS))
 
     data_dict_danila = dict(zip(keys, danila))
 
@@ -47,9 +47,6 @@ def otchet():
 
     actions_denis_yesterday = process_rows_actions(actions_denis_get)
 
-    print(len(actions_danila_yesterday))
-
-    print(len(actions_denis_yesterday))
 
     data_old_two_ip = [data_dict_danila['revenue'],data_dict_danila['profit'],data_dict_denis['revenue'],data_dict_denis['profit'],profit_yesterday_danila[0],profit_yesterday_denis[0]]
 
