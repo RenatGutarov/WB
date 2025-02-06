@@ -1,16 +1,14 @@
 import time
 from MPSTATS_API import update_conc,sheet
 from WB_API import update_prices, slovar
+from messaging import send_message_renat
 from otchet import otchet
 import schedule
 from base_info import get_articles
-from total_profit import process_rows,rows_denis,rows_danila
+from total_profit import process_rows
 import gspread
 from worksheet import get_general, Constants
-
-
-
-
+from total_profit import get_data
 
 def main_def():
 
@@ -22,18 +20,29 @@ def main_def():
 
     update_prices(slovar)
 
-    result_danila = process_rows(rows_danila)
+    result_danila = process_rows(get_data(Constants.DANILA))
 
     get_general(Constants.DANILA).insert_row(result_danila, 3)
 
-    result_denis = process_rows(rows_denis)
+    send_message_renat('Общее Грищенко обновилось')
+
+    print('Общее Грищенко обновлено')
+
+    result_denis = process_rows(get_data(Constants.DENIS))
 
     del result_denis [16:18]
 
     get_general(Constants.DENIS).insert_row(result_denis, 3)
 
+    print('Общее Коротченков обновлено')
 
-schedule.every().day.at('12:18').do(main_def)
+    send_message_renat('Общее Коротченков обновилось')
+
+    send_message_renat('Все скрипты отработали')
+
+    print('Все скрипты отработали')
+
+schedule.every().day.at('11:30').do(main_def)
 
 
 
