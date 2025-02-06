@@ -6,7 +6,8 @@ from dotenv import load_dotenv
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from babel.dates import format_date
-from worksheet import Constants, get_sheet_yesterday, get_general
+
+from worksheet import get_sheet_yesterday
 from spp import spp_finder
 from meteo import get_temp
 
@@ -22,13 +23,12 @@ client = gspread.authorize(creds)
 
 load_dotenv()
 
-sh_danila_get = get_sheet_yesterday(Constants.DANILA)
+def get_data(name):
+    sh_ip_get = get_sheet_yesterday(name)
+    rows_ip = sh_ip_get.get('1:100')
+    return rows_ip
 
-sh_denis_get = get_sheet_yesterday(Constants.DENIS)
 
-rows_danila = sh_danila_get.get('1:100')
-
-rows_denis = sh_denis_get.get('1:100')
 
 def process_rows(rows):
     result = []
@@ -58,70 +58,123 @@ def process_rows(rows):
             ):
                 # Заказы
                 revenue_str = row[index + 1]
-                revenue_str = revenue_str[2:-3]
-                revenue_str_cleaned = revenue_str.replace('\xa0', '').strip()
-                result.append(int(revenue_str_cleaned))
+                if len(revenue_str) > 9:
+                    revenue_str = revenue_str[2:-3]
+                    revenue_str_cleaned = revenue_str.replace('\xa0', '').strip()
+                    result.append(int(revenue_str_cleaned))
+                else:
+                    revenue_str = revenue_str[2:]
+                    revenue_str_cleaned = revenue_str.replace('\xa0', '').strip()
+                    result.append(int(revenue_str_cleaned))
                 # Штуки
                 pieces = row[index + 2]
-                pieces = int(pieces)
-                result.append(pieces)
+                if len(pieces) > 3:
+                    pieces = pieces[:-3]
+                    pieces = int(pieces)
+                    result.append(pieces)
+                else:
+                    pieces = int(pieces)
+                    result.append(pieces)
                 # ПВ
                 procent = row[index + 3]
-                procent = procent[:-4]
-                procent = int(procent) / 100
-                result.append(procent)
+                if len(procent) > 3:
+                    procent = procent[:-4]
+                    procent = int(procent) / 100
+                    result.append(procent)
+                else:
+                    procent = procent[:-1]
+                    procent = int(procent) / 100
+                    result.append(procent)
                 # Выкупят
                 revenue_str4 = row[index + 4]
-                revenue_str4 = revenue_str4[2:-3]
-                revenue_str_cleaned = revenue_str4.replace('\xa0', '').strip()
-                result.append(int(revenue_str_cleaned))
+                if len(revenue_str4) > 9:
+                    revenue_str4 = revenue_str4[2:-3]
+                    revenue_str_cleaned = revenue_str4.replace('\xa0', '').strip()
+                    result.append(int(revenue_str_cleaned))
+                else:
+                    revenue_str4 = revenue_str4[2:]
+                    revenue_str_cleaned = revenue_str4.replace('\xa0', '').strip()
+                    result.append(int(revenue_str_cleaned))
                 # Выкупят штук
                 will_buy = row[index + 5]
-                will_buy = will_buy[:-3]
-                result.append(will_buy)
+                if len(will_buy) > 3:
+                    will_buy = will_buy[:-3]
+                    result.append(will_buy)
+                else:
+                    result.append(will_buy)
                 # Себес
                 cost_price_proc = row[index + 6]
-                cost_price_proc = cost_price_proc[:-4]
-                cost_price_proc = int(cost_price_proc) / 100
-                result.append(cost_price_proc)
+                if len(cost_price_proc) > 3:
+                    cost_price_proc = cost_price_proc[:-4]
+                    cost_price_proc = int(cost_price_proc) / 100
+                    result.append(cost_price_proc)
+                else:
+                    cost_price_proc = cost_price_proc[:-1]
+                    cost_price_proc = int(cost_price_proc) / 100
+                    result.append(cost_price_proc)
                 # Комиссия
                 commission = row[index + 7]
-                commission = commission[:-4]
-                commission = int(commission) / 100
-                result.append(commission)
+                if len(commission) > 3:
+                    commission = commission[:-4]
+                    commission = int(commission) / 100
+                    result.append(commission)
+                else:
+                    commission = commission[:-1]
+                    commission = int(commission) / 100
+                    result.append(commission)
                 # Логистика
                 logistic = row[index + 8]
-                logistic = logistic[:-4]
-                logistic = int(logistic) / 100
-                result.append(logistic)
+                if len(logistic) > 3:
+                    logistic = logistic[:-4]
+                    logistic = int(logistic) / 100
+                    result.append(logistic)
+                else:
+                    logistic = logistic[:-1]
+                    logistic = int(logistic) / 100
+                    result.append(logistic)
                 # Налог
                 tax = row[index + 9]
-                tax = tax[:-4]
-                tax = int(tax) / 100
-                result.append(tax)
+                if len(tax) > 3:
+                    tax = tax[:-4]
+                    tax = int(tax) / 100
+                    result.append(tax)
+                else:
+                    tax = tax[:-1]
+                    tax = int(tax) / 100
+                    result.append(tax)
                 # Хранение
                 storage = row[index + 10]
                 storage = storage[:-1].replace(',', '.')
                 result.append(float(storage) / 100)
                 # Реклама
                 add = row[index + 11]
-                add = add[2:-3]
-                add = add.replace('\xa0', '').strip()
-                result.append(int(add))
+                if len(add) > 9:
+                    add = add[2:-3]
+                    add = add.replace('\xa0', '').strip()
+                    result.append(int(add))
+                else:
+                    add = add[2:]
+                    add = add.replace('\xa0', '').strip()
+                    result.append(int(add))
                 # DRR
                 drr = row[index + 12]
                 drr = drr[:-1].replace(',', '.')
                 result.append(float(drr) / 100)
                 # Прибыль
                 profit = row[index + 13]
-                profit = profit[2:-3]
-                profit = profit.replace('\xa0', '')
-                result.append(int(profit))
+                if len(profit) > 9:
+                    profit = profit[2:-3]
+                    profit = profit.replace('\xa0', '')
+                    result.append(int(profit))
+                else:
+                    profit = profit[2:]
+                    profit = profit.replace('\xa0', '')
+                    result.append(int(profit))
                 # Рентабельность
                 profitability = row[index + 14]
                 profitability = profitability[:-1].replace(',', '.')
                 result.append(float(profitability) / 100)
-
+                print(result)
     groups = ['57','162']
 
     for group in groups:
@@ -154,7 +207,6 @@ def process_rows(rows):
     result.append(get_temp())
 
     return result
-
 
 def process_rows_delta(rows):
     result = []
