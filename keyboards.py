@@ -12,7 +12,8 @@ bot = telebot.TeleBot(API_TOKEN)
 markup_start = quick_markup({
     'Обновить табличку цен': {'callback_data':'update prices'},
     'Обновить анализ конкурентов':{'callback_data':'update conc'},
-    'Сделать отчет за вчера':{'callback_data':'make otchet'}
+    'Сделать отчет за вчера':{'callback_data':'make otchet'},
+    'Обновить ОБЩЕЕ для двух ИП':{'callback_data':'update general'}
 }, row_width=2)
 
 markup_report_danila = quick_markup({
