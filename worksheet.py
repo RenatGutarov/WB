@@ -45,3 +45,8 @@ def get_delta(name):
     sh = slovar[name]
     current_sheet = (datetime.now() - timedelta(days=2)).strftime("%d.%m.%Y")
     return sh.worksheet(current_sheet)
+
+def get_spp_sheet(name):
+    sh = slovar[name]
+    current_sheet = 'SPP'
+    return sh.worksheet(current_sheet)

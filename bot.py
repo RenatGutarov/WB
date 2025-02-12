@@ -3,7 +3,7 @@ import os
 from WB_API import update_prices, slovar
 from MPSTATS_API import update_conc
 from base_info import get_articles
-from total_profit import process_rows, rows_danila, rows_denis
+from total_profit import process_rows, get_data
 from worksheet import get_sheet, Constants, get_general
 from keyboards import  markup_report_danila, markup_start, markup_report_denis
 from otchet import otchet
@@ -98,11 +98,11 @@ def prices_and_reports(call):
     elif call.data == 'update general':
         bot.send_message(call.message.chat.id, 'Общее обновляется')
 
-        result_danila = process_rows(rows_danila)
+        result_danila = process_rows(get_data(Constants.DANILA))
 
         get_general(Constants.DANILA).insert_row(result_danila, 3)
 
-        result_denis = process_rows(rows_denis)
+        result_denis = process_rows(get_data(Constants.DENIS))
 
         del result_denis[16:18]
 

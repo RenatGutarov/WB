@@ -6,8 +6,8 @@ from dotenv import load_dotenv
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from babel.dates import format_date
-
-from worksheet import get_sheet_yesterday
+from spp import get_spp
+from worksheet import get_sheet_yesterday, Constants
 from spp import spp_finder
 from meteo import get_temp
 
@@ -203,7 +203,7 @@ def process_rows(rows):
               sale_price = item['avg_sale_price']
               result.append(revenue)
               result.append(math.floor(sale_price))
-    result.append(spp_finder() / 100)
+    result.append(get_spp(Constants.DENIS))
     result.append(get_temp())
 
     return result

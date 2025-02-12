@@ -1,10 +1,9 @@
 from total_profit import process_rows, process_rows_delta, process_rows_actions, get_data
-import gspread
 from messaging import send_message
-import re
 import math
 from worksheet import Constants, get_sheet_yesterday, get_delta
-from spp import spp_finder
+from spp import spp_finder, get_spp
+
 
 def otchet():
     danila = process_rows(get_data(Constants.DANILA))
@@ -61,8 +60,8 @@ def otchet():
 
     delta_yesterday = final_profit - sum_of_profits_yesterday
 
-    spp = spp_finder()
-
+    spp = get_spp(Constants.DENIS)
+    print(spp)
     if len(actions_danila_yesterday) > 0  and len(actions_denis_yesterday) > 0  and delta_yesterday < 0:
         actions_str_danila = '\n'.join(actions_danila_yesterday)
         actions_str_denis = '\n'.join(actions_denis_yesterday)
@@ -71,7 +70,7 @@ def otchet():
 💰 ВЫРУЧКА = {data_dict_danila['revenue']}.р
 💵 В. ПРИБЫЛЬ = {data_dict_danila['profit']}.р
 💎 В. РЕНТА = {round(data_dict_danila['profitability'] * 100,2)}%
-💣 ДРР = {data_dict_danila['drr'] * 100}%
+💣 ДРР = {round(data_dict_danila['drr'] * 100,2)}%
 Что сделали вчера:
 {actions_str_danila}
 
@@ -79,7 +78,7 @@ def otchet():
 💰 ВЫРУЧКА = {data_dict_denis['revenue']}.р
 💵 В. ПРИБЫЛЬ = {data_dict_denis['profit']}.р
 💎 В. РЕНТА = {round(data_dict_denis['profitability'] * 100,2)}%
-💣 ДРР = {data_dict_denis['drr'] * 100}%
+💣 ДРР = {round(data_dict_denis['drr'] * 100,2)}%
 Что сделали вчера:
 {actions_str_denis}
 
@@ -99,7 +98,7 @@ def otchet():
 💰 ВЫРУЧКА = {data_dict_danila['revenue']}.р
 💵 В. ПРИБЫЛЬ = {data_dict_danila['profit']}.р
 💎 В. РЕНТА = {round(data_dict_danila['profitability'] * 100,2)}%
-💣 ДРР = {data_dict_danila['drr'] * 100}%
+💣 ДРР = {round(data_dict_danila['drr'] * 100,2)}%
 Что сделали вчера:
 {actions_str_danila}
 
@@ -107,7 +106,7 @@ def otchet():
 💰 ВЫРУЧКА = {data_dict_denis['revenue']}.р
 💵 В. ПРИБЫЛЬ = {data_dict_denis['profit']}.р
 💎 В. РЕНТА = {round(data_dict_denis['profitability'] * 100,2)}%
-💣 ДРР = {data_dict_denis['drr'] * 100}%
+💣 ДРР = {round(data_dict_denis['drr'] * 100,2)}%
 Что сделали вчера:
 {actions_str_denis}
 
@@ -126,7 +125,7 @@ def otchet():
 💰 ВЫРУЧКА = {data_dict_danila['revenue']}.р
 💵 В. ПРИБЫЛЬ = {data_dict_danila['profit']}.р
 💎 В. РЕНТА = {round(data_dict_danila['profitability'] * 100,2)}%
-💣 ДРР = {data_dict_danila['drr'] * 100}%
+💣 ДРР = {round(data_dict_danila['drr'] * 100,2)}%
 Что сделали вчера:
     
 
@@ -134,7 +133,7 @@ def otchet():
 💰 ВЫРУЧКА = {data_dict_denis['revenue']}.р
 💵 В. ПРИБЫЛЬ = {data_dict_denis['profit']}.р
 💎 В. РЕНТА = {round(data_dict_denis['profitability'] * 100,2)}%
-💣 ДРР = {data_dict_denis['drr'] * 100}%
+💣 ДРР = {round(data_dict_denis['drr'] * 100,2)}%
 Что сделали вчера:
 {actions_str_denis}
 
@@ -154,7 +153,7 @@ def otchet():
 💰 ВЫРУЧКА = {data_dict_danila['revenue']}.р
 💵 В. ПРИБЫЛЬ = {data_dict_danila['profit']}.р
 💎 В. РЕНТА = {round(data_dict_danila['profitability'] * 100,2)}%
-💣 ДРР = {data_dict_danila['drr'] * 100}%
+💣 ДРР = {round(data_dict_danila['drr'] * 100,2)}%
 Что сделали вчера:
 {actions_str_danila}
 
@@ -162,7 +161,7 @@ def otchet():
 💰 ВЫРУЧКА = {data_dict_denis['revenue']}.р
 💵 В. ПРИБЫЛЬ = {data_dict_denis['profit']}.р
 💎 В. РЕНТА = {round(data_dict_denis['profitability'] * 100,2)}%
-💣 ДРР = {data_dict_denis['drr'] * 100}%
+💣 ДРР = {round(data_dict_denis['drr'] * 100,2)}%
 Что сделали вчера:
 {actions_str_denis}
 
@@ -181,7 +180,7 @@ def otchet():
 💰 ВЫРУЧКА = {data_dict_danila['revenue']}.р
 💵 В. ПРИБЫЛЬ = {data_dict_danila['profit']}.р
 💎 В. РЕНТА = {round(data_dict_danila['profitability'] * 100,2)}%
-💣 ДРР = {data_dict_danila['drr'] * 100}%
+💣 ДРР = {round(data_dict_danila['drr'] * 100,2)}%
 Что сделали вчера:
 {actions_str_danila}
 
@@ -189,7 +188,7 @@ def otchet():
 💰 ВЫРУЧКА = {data_dict_denis['revenue']}.р
 💵 В. ПРИБЫЛЬ = {data_dict_denis['profit']}.р
 💎 В. РЕНТА = {round(data_dict_denis['profitability'] * 100,2)}%
-💣 ДРР = {data_dict_denis['drr'] * 100}%
+💣 ДРР = {round(data_dict_denis['drr'] * 100,2)}%
 Что сделали вчера:
     
 
@@ -208,7 +207,7 @@ def otchet():
 💰 ВЫРУЧКА = {data_dict_danila['revenue']}.р
 💵 В. ПРИБЫЛЬ = {data_dict_danila['profit']}.р
 💎 В. РЕНТА = {round(data_dict_danila['profitability'] * 100,2)}%
-💣 ДРР = {data_dict_danila['drr'] * 100}%
+💣 ДРР = {round(data_dict_danila['drr'] * 100,2)}%
 Что сделали вчера:
 {actions_str_danila}
 
@@ -216,7 +215,7 @@ def otchet():
 💰 ВЫРУЧКА = {data_dict_denis['revenue']}.р
 💵 В. ПРИБЫЛЬ = {data_dict_denis['profit']}.р
 💎 В. РЕНТА = {round(data_dict_denis['profitability'] * 100,2)}%
-💣 ДРР = {data_dict_denis['drr'] * 100}%
+💣 ДРР = {round(data_dict_denis['drr'] * 100,2)}%
 Что сделали вчера:
 
 ИТОГО
@@ -233,7 +232,7 @@ def otchet():
 💰 ВЫРУЧКА = {data_dict_danila['revenue']}.р
 💵 В. ПРИБЫЛЬ = {data_dict_danila['profit']}.р
 💎 В. РЕНТА = {round(data_dict_danila['profitability'] * 100,2)}%
-💣 ДРР = {data_dict_danila['drr'] * 100}%
+💣 ДРР = {round(data_dict_danila['drr'] * 100,2)}%
 Что сделали вчера:
     
 
@@ -241,7 +240,7 @@ def otchet():
 💰 ВЫРУЧКА = {data_dict_denis['revenue']}.р
 💵 В. ПРИБЫЛЬ = {data_dict_denis['profit']}.р
 💎 В. РЕНТА = {round(data_dict_denis['profitability'] * 100,2)}%
-💣 ДРР = {data_dict_denis['drr'] * 100}%
+💣 ДРР = {round(data_dict_denis['drr'] * 100,2)}%
 Что сделали вчера:
 
 ИТОГО
@@ -258,7 +257,7 @@ def otchet():
 💰 ВЫРУЧКА = {data_dict_danila['revenue']}.р
 💵 В. ПРИБЫЛЬ = {data_dict_danila['profit']}.р
 💎 В. РЕНТА = {round(data_dict_danila['profitability'] * 100,2)}%
-💣 ДРР = {data_dict_danila['drr'] * 100}%
+💣 ДРР = {round(data_dict_danila['drr'] * 100,2)}%
 Что сделали вчера:
     
 
@@ -266,7 +265,7 @@ def otchet():
 💰 ВЫРУЧКА = {data_dict_denis['revenue']}.р
 💵 В. ПРИБЫЛЬ = {data_dict_denis['profit']}.р
 💎 В. РЕНТА = {round(data_dict_denis['profitability'] * 100,2)}%
-💣 ДРР = {data_dict_denis['drr'] * 100}%
+💣 ДРР = {round(data_dict_denis['drr'] * 100,2)}%
 Что сделали вчера:
 
 ИТОГО
@@ -277,9 +276,5 @@ def otchet():
 💣 ДРР = {final_drr}%
  СПП БЫЛ = {spp}%
 ''')
-
-
-
-
 
 
