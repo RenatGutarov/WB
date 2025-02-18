@@ -47,10 +47,10 @@ def spp_finder(name):
     if len(flat_lst) > 1:
         sheet.update_acell('C2',spp)
 
-    if len(flat_lst) > 2:
+    elif len(flat_lst) > 2:
         sheet.update_acell('d2', spp)
 
-    if len(flat_lst) == 0:
+    elif len(flat_lst) == 0:
         sheet.update([result],'a2:b2')
 
 
