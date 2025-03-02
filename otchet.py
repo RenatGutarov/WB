@@ -2,279 +2,123 @@ from total_profit import process_rows, process_rows_delta, process_rows_actions,
 from messaging import send_message
 import math
 from worksheet import Constants, get_sheet_yesterday, get_delta
-from spp import spp_finder, get_spp
+from spp import get_spp
+
+
+def get_user_data(user_constants):
+    """Получает данные для пользователя."""
+    return process_rows(get_data(user_constants))
+
+
+def get_actions(user_constants):
+    """Получает действия пользователя за вчерашний день."""
+    actions_sheet = get_sheet_yesterday(user_constants)
+    actions = actions_sheet.get('1:100')
+    return process_rows_actions(actions)
+
+
+def get_profit_yesterday(user_constants):
+    """Получает прибыль за вчерашний день."""
+    delta_sheet = get_delta(user_constants)
+    delta_data = delta_sheet.get('1:100')
+    return process_rows_delta(delta_data)[0]
+
+
+def calculate_metrics(data_list, profit_yesterday):
+    """Вычисляет метрики для пользователя."""
+    final_revenue = data_list[2]  # revenue
+    final_profit = data_list[14]  # profit
+    final_profitability = math.floor(final_profit / final_revenue * 100)
+    final_drr = math.floor((data_list[12] / final_revenue) * 100)  # add
+    delta_yesterday = final_profit - profit_yesterday
+    return final_revenue, final_profit, final_profitability, final_drr, delta_yesterday
+
+
+def generate_user_report(data_list, actions, delta_yesterday):
+    """Формирует отчет для пользователя."""
+    report = f'''
+💰 ВЫРУЧКА = {data_list[2]}.р
+💵 В. ПРИБЫЛЬ = {data_list[14]}.р
+💎 В. РЕНТА = {round(data_list[15] * 100, 2)}%
+💣 ДРР = {round(data_list[13] * 100, 2)}%
+Что сделали вчера:
+{'\n'.join(actions) if actions else "Нет данных"}
+'''
+    if delta_yesterday < 0:
+        report += f'🌹 Дельта = {delta_yesterday}.р\n'
+    else:
+        report += f'🍀 Дельта = {delta_yesterday}.р\n'
+    return report
+
+
+def calculate_final_metrics(danila_metrics, denis_metrics, danila_data, denis_data, profit_yesterday_danila, profit_yesterday_denis):
+    """Вычисляет итоговые метрики."""
+    final_revenue = danila_metrics[0] + denis_metrics[0]
+    final_profit = danila_metrics[1] + denis_metrics[1]
+    final_profitability = math.floor(final_profit / final_revenue * 100)
+    final_drr = math.floor((danila_data[12] + denis_data[12]) / final_revenue * 100)  # add
+    delta_yesterday = danila_metrics[4] + denis_metrics[4]
+    total_delta = final_profit - (profit_yesterday_danila + profit_yesterday_denis)
+    return final_revenue, final_profit, final_profitability, final_drr, delta_yesterday, total_delta
+
+
+def send_final_report(danila_report, denis_report, final_metrics, spp):
+    """Отправляет итоговый отчет."""
+    final_revenue, final_profit, final_profitability, final_drr, delta_yesterday, total_delta = final_metrics
+
+    # Определяем значок для общей дельты
+    delta_icon = '🌹' if total_delta < 0 else '🍀'
+
+    message = f'''
+{danila_report}
+
+{denis_report}
+
+ИТОГО
+💰 ВЫРУЧКА = {final_revenue}.р
+💵 В. ПРИБЫЛЬ = {final_profit}.р
+{delta_icon} Общая дельта = {total_delta}.р
+💎 В. РЕНТА = {final_profitability}%
+💣 ДРР = {final_drr}%
+СПП БЫЛ = {spp}%
+'''
+    send_message(message)
 
 
 def otchet():
-    danila = process_rows(get_data(Constants.DANILA))
+    # Получение данных для каждого пользователя
+    danila_data = get_user_data(Constants.DANILA)
+    denis_data = get_user_data(Constants.DENIS)
 
-    keys = [
-         'date', 'day_of_week', 'revenue', 'pieces', 'procent',
-         'revenue_buy', 'will_buy', 'cost_price_proc', 'commission',
-         'logistic', 'tax', 'storage', 'add', 'drr', 'profit',
-         'profitability', 'scarfs_rinok', 'scarfs_check', 'pjms_rinok',
-         'pjms_checs', 'spp', 'temp'
-    ]
+    # Получение действий за вчерашний день
+    actions_danila = get_actions(Constants.DANILA)
+    actions_denis = get_actions(Constants.DENIS)
 
-    denis = process_rows(get_data(Constants.DENIS))
+    # Получение прибыли за вчерашний день
+    profit_yesterday_danila = get_profit_yesterday(Constants.DANILA)
+    profit_yesterday_denis = get_profit_yesterday(Constants.DENIS)
 
-    data_dict_danila = dict(zip(keys, danila))
+    # Расчет метрик для каждого пользователя
+    danila_metrics = calculate_metrics(danila_data, profit_yesterday_danila)
+    denis_metrics = calculate_metrics(denis_data, profit_yesterday_denis)
 
-    data_dict_denis = dict(zip(keys, denis))
+    # Формирование отчетов для каждого пользователя
+    danila_report = generate_user_report(danila_data, actions_danila, danila_metrics[4])
+    denis_report = generate_user_report(denis_data, actions_denis, denis_metrics[4])
 
-    delta_sheet_danila = get_delta(Constants.DANILA)
+    # Расчет итоговых метрик
+    final_metrics = calculate_final_metrics(
+        danila_metrics, denis_metrics, danila_data, denis_data, profit_yesterday_danila, profit_yesterday_denis
+    )
 
-    delta_sheet_denis = get_delta(Constants.DENIS)
-
-    actions_danila_new = get_sheet_yesterday(Constants.DANILA)
-
-    actions_denis_new = get_sheet_yesterday(Constants.DENIS)
-
-    actions_denis_get = actions_denis_new.get('1:100')
-
-    actions_danila_get = actions_danila_new.get('1:100')
-
-    delta_sheet_danila_get = delta_sheet_danila.get('1:100')
-
-    delta_sheet_denis_get = delta_sheet_denis.get('1:100')
-
-    profit_yesterday_danila = process_rows_delta(delta_sheet_danila_get)
-
-    profit_yesterday_denis = process_rows_delta(delta_sheet_denis_get)
-
-    actions_danila_yesterday = process_rows_actions(actions_danila_get)
-
-    actions_denis_yesterday = process_rows_actions(actions_denis_get)
-
-
-    data_old_two_ip = [data_dict_danila['revenue'],data_dict_danila['profit'],data_dict_denis['revenue'],data_dict_denis['profit'],profit_yesterday_danila[0],profit_yesterday_denis[0]]
-
-    ad_danila_denis = [data_dict_danila['add'], data_dict_denis['add'],]
-
-    final_revenue = data_old_two_ip[0] + data_old_two_ip[2]
-    final_profit = data_old_two_ip[1] + data_old_two_ip[3]
-    final_profitability = math.floor(final_profit / final_revenue * 100)
-    chet_drr = (ad_danila_denis[0] + ad_danila_denis[1]) / final_revenue
-    final_drr = math.floor(chet_drr * 100)
-    sum_of_profits_yesterday = data_old_two_ip[4] + data_old_two_ip[5]
-
-    delta_yesterday = final_profit - sum_of_profits_yesterday
-
+    # Получение данных о СПП
     spp = get_spp(Constants.DENIS)
-    print(spp)
-    if len(actions_danila_yesterday) > 0  and len(actions_denis_yesterday) > 0  and delta_yesterday < 0:
-        actions_str_danila = '\n'.join(actions_danila_yesterday)
-        actions_str_denis = '\n'.join(actions_denis_yesterday)
-        send_message(f'''
-Грищенко
-💰 ВЫРУЧКА = {data_dict_danila['revenue']}.р
-💵 В. ПРИБЫЛЬ = {data_dict_danila['profit']}.р
-💎 В. РЕНТА = {round(data_dict_danila['profitability'] * 100,2)}%
-💣 ДРР = {round(data_dict_danila['drr'] * 100,2)}%
-Что сделали вчера:
-{actions_str_danila}
 
-Коротченков
-💰 ВЫРУЧКА = {data_dict_denis['revenue']}.р
-💵 В. ПРИБЫЛЬ = {data_dict_denis['profit']}.р
-💎 В. РЕНТА = {round(data_dict_denis['profitability'] * 100,2)}%
-💣 ДРР = {round(data_dict_denis['drr'] * 100,2)}%
-Что сделали вчера:
-{actions_str_denis}
+    # Отправка итогового отчета
+    send_final_report(danila_report, denis_report, final_metrics, spp)
 
-ИТОГО
-💰 ВЫРУЧКА = {final_revenue}.р
-💵 В. ПРИБЫЛЬ = {final_profit}.р
-🌹 Дельта = {delta_yesterday}.р
-💎 В. РЕНТА = {final_profitability}%
-💣 ДРР = {final_drr}%
- СПП БЫЛ = {spp}%
-''')
-    elif len(actions_danila_yesterday) > 0 and len(actions_denis_yesterday) > 0  and delta_yesterday > 0:
-        actions_str_danila = '\n'.join(actions_danila_yesterday)
-        actions_str_denis = '\n'.join(actions_denis_yesterday)
-        send_message(f'''
-Грищенко
-💰 ВЫРУЧКА = {data_dict_danila['revenue']}.р
-💵 В. ПРИБЫЛЬ = {data_dict_danila['profit']}.р
-💎 В. РЕНТА = {round(data_dict_danila['profitability'] * 100,2)}%
-💣 ДРР = {round(data_dict_danila['drr'] * 100,2)}%
-Что сделали вчера:
-{actions_str_danila}
 
-Коротченков
-💰 ВЫРУЧКА = {data_dict_denis['revenue']}.р
-💵 В. ПРИБЫЛЬ = {data_dict_denis['profit']}.р
-💎 В. РЕНТА = {round(data_dict_denis['profitability'] * 100,2)}%
-💣 ДРР = {round(data_dict_denis['drr'] * 100,2)}%
-Что сделали вчера:
-{actions_str_denis}
-
-ИТОГО
-💰 ВЫРУЧКА = {final_revenue}.р
-💵 В. ПРИБЫЛЬ = {final_profit}.р
-🍀 Дельта = {delta_yesterday}.р
-💎 В. РЕНТА = {final_profitability}%
-💣 ДРР = {final_drr}%
-СПП БЫЛ = {spp}%
-''')
-    elif len(actions_danila_yesterday) < 1  and len(actions_denis_yesterday) > 0 and delta_yesterday < 0:
-        actions_str_denis = '\n'.join(actions_denis_yesterday)
-        send_message(f'''
-Грищенко
-💰 ВЫРУЧКА = {data_dict_danila['revenue']}.р
-💵 В. ПРИБЫЛЬ = {data_dict_danila['profit']}.р
-💎 В. РЕНТА = {round(data_dict_danila['profitability'] * 100,2)}%
-💣 ДРР = {round(data_dict_danila['drr'] * 100,2)}%
-Что сделали вчера:
-    
-
-Коротченков
-💰 ВЫРУЧКА = {data_dict_denis['revenue']}.р
-💵 В. ПРИБЫЛЬ = {data_dict_denis['profit']}.р
-💎 В. РЕНТА = {round(data_dict_denis['profitability'] * 100,2)}%
-💣 ДРР = {round(data_dict_denis['drr'] * 100,2)}%
-Что сделали вчера:
-{actions_str_denis}
-
-ИТОГО
-💰 ВЫРУЧКА = {final_revenue}.р
-💵 В. ПРИБЫЛЬ = {final_profit}.р
-🌹 Дельта = {delta_yesterday}.р
-💎 В. РЕНТА = {final_profitability}%
-💣 ДРР = {final_drr}%
-СПП БЫЛ = {spp}%
-''')
-    elif len(actions_danila_yesterday) < 1   and len(actions_denis_yesterday) > 0  and delta_yesterday > 0:
-        actions_str_danila = '\n'.join(actions_danila_yesterday)
-        actions_str_denis = '\n'.join(actions_denis_yesterday)
-        send_message(f'''
-Грищенко
-💰 ВЫРУЧКА = {data_dict_danila['revenue']}.р
-💵 В. ПРИБЫЛЬ = {data_dict_danila['profit']}.р
-💎 В. РЕНТА = {round(data_dict_danila['profitability'] * 100,2)}%
-💣 ДРР = {round(data_dict_danila['drr'] * 100,2)}%
-Что сделали вчера:
-{actions_str_danila}
-
-Коротченков
-💰 ВЫРУЧКА = {data_dict_denis['revenue']}.р
-💵 В. ПРИБЫЛЬ = {data_dict_denis['profit']}.р
-💎 В. РЕНТА = {round(data_dict_denis['profitability'] * 100,2)}%
-💣 ДРР = {round(data_dict_denis['drr'] * 100,2)}%
-Что сделали вчера:
-{actions_str_denis}
-
-ИТОГО
-💰 ВЫРУЧКА = {final_revenue}.р
-💵 В. ПРИБЫЛЬ = {final_profit}.р
-🍀 Дельта = {delta_yesterday}.р
-💎 В. РЕНТА = {final_profitability}%
-💣 ДРР = {final_drr}%
-СПП БЫЛ = {spp}%
-''')
-    elif len(actions_denis_yesterday) < 1 and len(actions_danila_yesterday) > 0  and delta_yesterday < 0:
-        actions_str_danila = '\n'.join(actions_danila_yesterday)
-        send_message(f'''
-Грищенко
-💰 ВЫРУЧКА = {data_dict_danila['revenue']}.р
-💵 В. ПРИБЫЛЬ = {data_dict_danila['profit']}.р
-💎 В. РЕНТА = {round(data_dict_danila['profitability'] * 100,2)}%
-💣 ДРР = {round(data_dict_danila['drr'] * 100,2)}%
-Что сделали вчера:
-{actions_str_danila}
-
-Коротченков
-💰 ВЫРУЧКА = {data_dict_denis['revenue']}.р
-💵 В. ПРИБЫЛЬ = {data_dict_denis['profit']}.р
-💎 В. РЕНТА = {round(data_dict_denis['profitability'] * 100,2)}%
-💣 ДРР = {round(data_dict_denis['drr'] * 100,2)}%
-Что сделали вчера:
-    
-
-ИТОГО
-💰 ВЫРУЧКА = {final_revenue}.р
-💵 В. ПРИБЫЛЬ = {final_profit}.р
-🌹 Дельта = {delta_yesterday}.р
-💎 В. РЕНТА = {final_profitability}%
-💣 ДРР = {final_drr}%
-СПП БЫЛ = {spp}%
-''')
-    elif len(actions_denis_yesterday) < 1 and len(actions_danila_yesterday) > 0 and delta_yesterday > 0:
-        actions_str_danila = '\n'.join(actions_danila_yesterday)
-        send_message(f'''
-Грищенко
-💰 ВЫРУЧКА = {data_dict_danila['revenue']}.р
-💵 В. ПРИБЫЛЬ = {data_dict_danila['profit']}.р
-💎 В. РЕНТА = {round(data_dict_danila['profitability'] * 100,2)}%
-💣 ДРР = {round(data_dict_danila['drr'] * 100,2)}%
-Что сделали вчера:
-{actions_str_danila}
-
-Коротченков
-💰 ВЫРУЧКА = {data_dict_denis['revenue']}.р
-💵 В. ПРИБЫЛЬ = {data_dict_denis['profit']}.р
-💎 В. РЕНТА = {round(data_dict_denis['profitability'] * 100,2)}%
-💣 ДРР = {round(data_dict_denis['drr'] * 100,2)}%
-Что сделали вчера:
-
-ИТОГО
-💰 ВЫРУЧКА = {final_revenue}.р
-💵 В. ПРИБЫЛЬ = {final_profit}.р
-🍀 Дельта = {delta_yesterday}.р
-💎 В. РЕНТА = {final_profitability}%
-💣 ДРР = {final_drr}%
- СПП БЫЛ = {spp}%
-''')
-    elif len(actions_danila_yesterday) < 1  and len(actions_denis_yesterday) < 1 and delta_yesterday < 0:
-        send_message(f'''
-Грищенко
-💰 ВЫРУЧКА = {data_dict_danila['revenue']}.р
-💵 В. ПРИБЫЛЬ = {data_dict_danila['profit']}.р
-💎 В. РЕНТА = {round(data_dict_danila['profitability'] * 100,2)}%
-💣 ДРР = {round(data_dict_danila['drr'] * 100,2)}%
-Что сделали вчера:
-    
-
-Коротченков
-💰 ВЫРУЧКА = {data_dict_denis['revenue']}.р
-💵 В. ПРИБЫЛЬ = {data_dict_denis['profit']}.р
-💎 В. РЕНТА = {round(data_dict_denis['profitability'] * 100,2)}%
-💣 ДРР = {round(data_dict_denis['drr'] * 100,2)}%
-Что сделали вчера:
-
-ИТОГО
-💰 ВЫРУЧКА = {final_revenue}.р
-💵 В. ПРИБЫЛЬ = {final_profit}.р
-🌹 Дельта = {delta_yesterday}.р
-💎 В. РЕНТА = {final_profitability}%
-💣 ДРР = {final_drr}%
- СПП БЫЛ = {spp}%
-''')
-    elif len(actions_danila_yesterday) < 1 and len(actions_denis_yesterday) < 1  and delta_yesterday > 0:
-        send_message(f'''
-Грищенко
-💰 ВЫРУЧКА = {data_dict_danila['revenue']}.р
-💵 В. ПРИБЫЛЬ = {data_dict_danila['profit']}.р
-💎 В. РЕНТА = {round(data_dict_danila['profitability'] * 100,2)}%
-💣 ДРР = {round(data_dict_danila['drr'] * 100,2)}%
-Что сделали вчера:
-    
-
-Коротченков
-💰 ВЫРУЧКА = {data_dict_denis['revenue']}.р
-💵 В. ПРИБЫЛЬ = {data_dict_denis['profit']}.р
-💎 В. РЕНТА = {round(data_dict_denis['profitability'] * 100,2)}%
-💣 ДРР = {round(data_dict_denis['drr'] * 100,2)}%
-Что сделали вчера:
-
-ИТОГО
-💰 ВЫРУЧКА = {final_revenue}.р
-💵 В. ПРИБЫЛЬ = {final_profit}.р
-🍀 Дельта = {delta_yesterday}.р
-💎 В. РЕНТА = {final_profitability}%
-💣 ДРР = {final_drr}%
- СПП БЫЛ = {spp}%
-''')
+if __name__ == '__main__':
+    otchet()
 
 
